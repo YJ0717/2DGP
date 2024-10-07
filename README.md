@@ -12,8 +12,8 @@
     ![2](https://github.com/user-attachments/assets/def48069-9c5d-4355-b4c9-1e1f3f72c2c3)
     ㄴ기본적인 공격 방식은 스킬외의 약한공격,강한공격,막기,잡아 밀치기가 존재합니다
     
-    ![1](https://github.com/user-attachments/assets/0e667338-efd0-4a2e-8708-12b5cdb0ed02)
-    ㄴ기본적인 1차스킬인  바람,불,얼음스킬 2차전직을 통해 얻을 수 있는 전문 직업스킬이 있습니다.
+    ![1](https://github.com/user-attachments/assets/f6721fd4-08f1-4775-a31c-5093bc997f43)
+    ㄴ기본적인 1차스킬인  바람,불,얼음스킬이 있으며 2차전직을 통해 얻을 수 있는 전문 직업스킬이 있습니다.
     
     ![3](https://github.com/user-attachments/assets/770fbfdd-6b8c-45a6-818f-be0643e17e95)
     ㄴ기본적인 조작키 가이드
