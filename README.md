@@ -11,12 +11,19 @@
 스킬은 기본적으로 바람,불,얼음 속성으로 구성되어있으며 각 클래스 마다 2차 전직 3차전직을 통해 속성스킬 외의 클래스에 맞는 전문 기술을 습득할 수 있습니다. .
     
 ![2](https://github.com/user-attachments/assets/def48069-9c5d-4355-b4c9-1e1f3f72c2c3) 
+
 ㄴ기본적인 공격 방식은 스킬외의 약한공격,강한공격,막기,잡아 밀치기가 존재합니다
+
 ![1](https://github.com/user-attachments/assets/f6721fd4-08f1-4775-a31c-5093bc997f43)  
+
 ㄴ기본적인 1차스킬인  바람,불,얼음스킬이 있으며 2차전직을 통해 얻을 수 있는 전문 직업스킬이 있습니다. 
+
 ![3](https://github.com/user-attachments/assets/770fbfdd-6b8c-45a6-818f-be0643e17e95)
+
 ㄴ기본적인 조작키 가이드  
+
 ![4](https://github.com/user-attachments/assets/251f8250-24b3-4e16-8c6f-1edf92744c46)
+
 ㄴ게임 UI 및 보스몬스터(빨간색) 및 일반몬스터
 
 2.예상 게임 실행 흐름(간단히 스케치한 그림 사용,게임이 어떤 식으로 진행되는지 직관적으로 알 수 있도록 구성)
