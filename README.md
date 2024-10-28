@@ -170,7 +170,19 @@ GFW는 기본적인 충돌 감지 기능을 제공하기 때문에 캐릭터와 
 ### 4-2: 개발 계획<br/>
 ![55555](https://github.com/user-attachments/assets/3d284538-5414-40be-958a-5f4c599f1611)
 
+##  5. 1차 발표 영상 YouTube link, 1차 발표 전까지의 활동 정리 <br/>
 
+### 5-1: 1차 발표 영상 YouTube link <br/>
+
+https://www.youtube.com/watch?v=ph-2jX2EVIM  <br/>
+
+### 5-2: 1차 발표 전까지의 활동 정리<br/>
+
+리소스 구하기 완료 <br/>
+
+time.h로 대쉬기능 구현해보기 완료 <br/>
+
+개발전 임시 설계 작성해보기 완료 <br/>
     
     
   
