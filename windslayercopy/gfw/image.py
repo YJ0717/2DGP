@@ -1,3 +1,4 @@
+#----------- 이미지 캐싱,애니메이션 스프라이트
 from pico2d import *
 import time
 
