@@ -1,3 +1,5 @@
+##월드 관련
+
 from pico2d import *
 import gfw
 

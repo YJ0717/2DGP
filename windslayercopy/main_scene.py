@@ -14,6 +14,7 @@ def exit():
 
 def handle_event(e):
     player.handle_event(e)
+    
 
 def update():
     player.update()
