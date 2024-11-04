@@ -106,8 +106,16 @@ class Player:
             self.frame_height = config.IDLE_FRAME_HEIGHT
 
         self.frame = round(self.time * fps) % frame_count
-        self.x += self.dx * self.speed * gfw.frame_time
-        self.y += self.dy * self.speed * gfw.frame_time
+
+        # =================플레이어의 현재 위치에 따른 캔버스 이동=================
+        new_x = self.x + self.dx * self.speed * gfw.frame_time
+        new_y = self.y + self.dy * self.speed * gfw.frame_time
+
+        #===플레이어가 캔버스에서 못벗어나게  설정하기===
+        if 0 <= new_x <= get_canvas_width():
+            self.x = new_x
+        if 0 <= new_y <= get_canvas_height():
+            self.y = new_y
     #==========================================점프 업데이트==========================================
     def update_jump(self):
         if self.is_jumping:
