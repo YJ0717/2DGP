@@ -84,7 +84,11 @@ class Player:
         if self.dash_time >= config.DASH_DURATION:
             self.is_dashing = False
         else:
-            self.x += self.dx * self.speed * config.DASH_SPEED_MULTIPLIER * gfw.frame_time
+            new_x = self.x + self.dx * self.speed * config.DASH_SPEED_MULTIPLIER * gfw.frame_time
+            
+            #===대쉬 시 캔버스를 벗어나지 않도록 설정하기===
+            if 0 <= new_x <= get_canvas_width():
+                self.x = new_x
     #==========================================이동 업데이트==========================================
     def update_movement(self):
         if self.dx != 0 or self.dy != 0:
