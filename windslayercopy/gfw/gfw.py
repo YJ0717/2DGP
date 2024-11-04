@@ -6,7 +6,7 @@ _stack = []
 
 def start(scene):
     import gfw
-    open_canvas(sync=True)
+    open_canvas(1250, 720, sync=True) #--- 캔버스 크기 설정
     push(scene)
 
     global frame_time
