@@ -2,8 +2,7 @@ from pico2d import *
 import gfw
 from player import CustomPlayer
 
-world = gfw.World(['background', 'player']) #배경 추가,나중에 배경이미지 조정
-
+world = gfw.World(['background', 'player']) #배경 추가,나중에 배경이미지 조정ㅕ
 class Background:
     def __init__(self):
         self.image = gfw.image.load('background.png')
