@@ -2,12 +2,16 @@ from pico2d import *
 import gfw
 import config
 import time
+from weapon import Weapon  
 
 class Player:
     #==========================================기본적인 움직임==========================================
     def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png'):
         self.load_images(walk_left_image_file, walk_right_image_file, idle_image_file)
         self.init_attribute()
+        self.weapon = None  #무기 추가
+        self.weapon_equipped = False  
+
     #==========================================행동이미지 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
@@ -63,6 +67,7 @@ class Player:
         self.double_jump_fps = config.PLAYER_DOUBLE_JUMP_FPS
         self.double_jump_frame_count = config.PLAYER_DOUBLE_JUMP_FRAME_COUNT
         self.double_jump_time = 0
+
     #==========================================행동 업데이트==========================================
     def update(self):
         self.time += gfw.frame_time
@@ -71,6 +76,10 @@ class Player:
         else:
             self.update_movement()
             self.update_jump()
+        
+        if self.weapon_equipped and self.weapon: #무기업데이트 추가
+            self.weapon.update(self)
+
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
         self.dash_time += gfw.frame_time
@@ -89,6 +98,7 @@ class Player:
             #===대쉬 시 캔버스를 벗어나지 않도록 설정하기===
             if 0 <= new_x <= get_canvas_width():
                 self.x = new_x
+
     #==========================================이동 업데이트==========================================
     def update_movement(self):
         if self.dx != 0 or self.dy != 0:
@@ -120,6 +130,7 @@ class Player:
             self.x = new_x
         if 0 <= new_y <= get_canvas_height():
             self.y = new_y
+
     #==========================================점프 업데이트==========================================
     def update_jump(self):
         if self.is_jumping:
@@ -133,16 +144,22 @@ class Player:
             if not self.can_double_jump:
                 self.double_jump_time += gfw.frame_time
                 self.double_jump_frame = round(self.double_jump_time * config.DOUBLE_JUMP_FPS) % self.double_jump_frame_count
+
     #==========================================그리기========================================== 
     def draw(self):
-        if self.is_dashing:
-            self.draw_dash()
-        elif self.is_jumping:
-            self.draw_jump()
+        if self.weapon_equipped and self.weapon:
+            # 무기가 장착된 경우 캐릭터 이미지를 그리지 않고 무기만 그리기
+            self.weapon.draw(self.x, self.y, 'h' if self.dx > 0 else '')
         else:
-            x = self.frame * self.frame_width
-            y = self.action * self.frame_height
-            self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
+            if self.is_dashing:
+                self.draw_dash()
+            elif self.is_jumping:
+                self.draw_jump()
+            else:
+                x = self.frame * self.frame_width
+                y = self.action * self.frame_height
+                self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
+
     #==========================================대쉬 그리기==========================================
     def draw_dash(self):
         frame_width, frame_height = config.DASH_FRAME_SIZES[self.dash_frame]
@@ -151,7 +168,7 @@ class Player:
             # 오른쪽 대쉬: dash.png를 수평 반전하여 사용
             self.dash_image_left.clip_composite_draw(
                 x, 0, frame_width, frame_height,
-                0, 'h',  # 'h'는 수평 반전을 의미
+                0, 'h',  # h는 수평 반전을 의미
                 self.x, self.y,
                 frame_width, frame_height  # 크기를 명시적으로 지정
             )
@@ -221,6 +238,10 @@ class Player:
                 self.is_dashing = True  
                 self.dash_time = 0  
 
+        # ============== 무기 장착/해제 처리 ============== 
+        elif e.key == SDLK_u:
+            self.toggle_weapon()
+
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
             self.dx = 0
@@ -228,6 +249,14 @@ class Player:
             self.dx = 0
         elif e.key == SDLK_DOWN and self.dy < 0:
             self.dy = 0
+
+    def toggle_weapon(self):
+        if self.weapon_equipped:
+            self.weapon_equipped = False
+            self.weapon = None
+        else:   
+            self.weapon_equipped = True
+            self.weapon = Weapon()  
 
 class CustomPlayer(Player):
     def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png'):
