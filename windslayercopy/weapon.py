@@ -2,37 +2,47 @@ from pico2d import *
 import gfw
 import config
 import gfw.image as image
+from attack import MagicAttack
 
 class Weapon:
-    # ======================무기를 장착한 스프리트 가져오기======================   
-    # ======================무기 애니메이션을 캐릭터 움직임에 따라 동기화 해야되기 때문에 player.py의 행동함수를 가져옴======================
-    def __init__(self, walk_left_image_file='weapon_walk.png', idle_image_file='weapon_idle.png', dash_image_file='weapon_dash.png', jump_image_file='weapon_jump.png', double_jump_image_file='weapon_jump2.png'):
-        self.load_images(walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file)
+    #==============무기 이미지를 로드하고 초기 속성을 설정======================
+    def __init__(self, walk_left_image_file='weapon_walk.png', idle_image_file='weapon_idle.png', dash_image_file='weapon_dash.png', jump_image_file='weapon_jump.png', double_jump_image_file='weapon_jump2.png', attack_image_file='basic_attack.png', attack_image_file2='second_attack.png'):
+        self.load_images(walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file)
         self.init_attributes()
-
-    def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file):
+        self.magic_attack = MagicAttack(attack_image_file, attack_image_file2)
+    # =============================== 무기 이미지 로드 ===============================
+    def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file):
         self.walk_left_image = image.load(walk_left_image_file)
         self.idle_image = image.load(idle_image_file)
         self.dash_image = image.load(dash_image_file)
         self.jump_image = image.load(jump_image_file)
         self.double_jump_image = image.load(double_jump_image_file)
+        self.attack_image = image.load(attack_image_file)
 
+    # =============================== 무기 초기 속성 설정 ===============================
     def init_attributes(self):
         self.current_image = self.idle_image
         self.frame = 0
         self.time = 0
         self.frame_width = config.IDLE_FRAME_WIDTH
         self.frame_height = config.IDLE_FRAME_HEIGHT
+        self.is_attacking = False
+        self.attack_time = 0
+        self.attack_duration = config.ATTACK_DURATION
 
+    # =============================== 공격,무기를착용했을때 행동 업데이트 ===============================
     def update(self, player):
         self.time += gfw.frame_time
-        if player.is_dashing:
+        if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
+            self.magic_attack.update()
+        elif player.is_dashing:
             self.update_dash(player)
         elif player.is_jumping:
             self.update_jump(player)
         else:
             self.update_movement(player)
 
+    # =============================== 대쉬 행동 업데이트 ===============================
     def update_dash(self, player):
         self.current_image = self.dash_image
         self.frame_width = config.WEAPON_DASH_FRAME_WIDTH
@@ -41,6 +51,7 @@ class Weapon:
         frame_count = config.WEAPON_DASH_FRAME_COUNT
         self.frame = round(self.time * fps) % frame_count
 
+    # =============================== 이동 행동 업데이트 ===============================
     def update_movement(self, player):
         if player.dx != 0:
             self.current_image = self.walk_left_image
@@ -56,7 +67,7 @@ class Weapon:
             frame_count = config.WEAPON_IDLE_FRAME_COUNT
 
         self.frame = round(self.time * fps) % frame_count
-
+    # =============================== 점프 행동 업데이트 ===============================
     def update_jump(self, player):
         if player.can_double_jump:
             self.current_image = self.jump_image
@@ -66,7 +77,6 @@ class Weapon:
             frame_count = config.WEAPON_JUMP_FRAME_COUNT
             self.frame = round(self.time * fps) % frame_count
         else:
-            # 더블 점프 애니메이션
             self.current_image = self.double_jump_image
             self.frame_width = config.WEAPON_DOUBLE_JUMP_FRAME_WIDTH
             self.frame_height = config.WEAPON_DOUBLE_JUMP_FRAME_HEIGHT
@@ -74,14 +84,27 @@ class Weapon:
             frame_count = config.WEAPON_DOUBLE_JUMP_FRAME_COUNT
             self.frame = round(self.time * fps) % frame_count
             
-            if self.frame == 0 and self.time > 0:   #------ 더블 점프중 남는 프레임이 다음 더블점프에 영향을줌 -> 초기화 시켜야 됨--------------------------------
+            if self.frame == 0 and self.time > 0:
                 self.time = 0
 
+    # =============================== 약한 공격 시작 ===============================
+    def start_attack(self):
+        if not self.magic_attack.is_attacking:
+            self.magic_attack.start_attack()
+
+    # =============================== 강한 공격 시작 ===============================
+    def start_attack2(self):
+        if not self.magic_attack.is_attacking2:
+            self.magic_attack.start_attack2()
+            
+    # =============================== 공격 이미지 그리기 ===============================
     def draw(self, x, y, flip='h'):
-       
-        x_offset = self.frame * self.frame_width
-        self.current_image.clip_composite_draw(
-            x_offset, 0, self.frame_width, self.frame_height,
-            0, flip, x, y,
-            self.frame_width, self.frame_height
-        ) 
+        if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
+            self.magic_attack.draw(x, y, flip)
+        else:
+            x_offset = self.frame * self.frame_width
+            self.current_image.clip_composite_draw(
+                x_offset, 0, self.frame_width, self.frame_height,
+                0, flip, x, y,
+                self.frame_width, self.frame_height
+            )
