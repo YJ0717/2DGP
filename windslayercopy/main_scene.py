@@ -2,14 +2,13 @@ from pico2d import *
 import gfw
 from player import CustomPlayer
 
-world = gfw.World(['background', 'player']) #배경 추가,나중에 배경이미지 조정ㅕ
+world = gfw.World(['background', 'player']) #배경 추가,나중에 배경이미지 조정
 class Background:
     def __init__(self):
         self.image = gfw.image.load('background.png')
         self.x = 0
-
     def update(self):
-        self.x = -player.x * 0.5  # 배경이 플레이어의 절반 속도로 움직이도록 설정 나중에 조절가능
+        self.x = -player.x * 0.5  # 배경이 플레이어의 절반 속도로 움직이도록 설정
 
     def draw(self):
         self.image.draw(self.x, 0)
