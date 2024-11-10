@@ -28,4 +28,4 @@ class AnimSprite:
     def draw(self):
         elpased = time.time() - self.created_on
         index = round(elpased * self.fps) % self.frame_count
-        self.image.clip_draw(index * self.width, 0, self.width, self.image.h, self.x, self.y)  # Fixed height reference
+        self.image.clip_draw(index * self.width, 0, self.width, self.image.h, self.x, self.y)  
