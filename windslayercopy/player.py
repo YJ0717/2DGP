@@ -3,20 +3,36 @@ import gfw
 import config
 import time
 from weapon import Weapon  
+from ui import PlayerUI
+from attack import MagicAttack
 
+############### 플레이어 캐릭터의 행동과 상태를 관리, Weapon 클래스를 사용하여 무기를 장착하고 공격전 행동 처리 ,MagicAttack 클래스를 통해  공격 투사체 처리#########
+############################################################################################################################################################
 class Player:
     #==========================================기본적인 움직임==========================================
-    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png'):
-        self.load_images(walk_left_image_file, walk_right_image_file, idle_image_file)
+    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png'):
+        self.load_images(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
         self.init_attribute()
-        self.weapon = None  #무기 추가
+        self.weapon = None  
         self.weapon_equipped = False  
+        #============= 추후 몬스터와 충돌처리할때 스탯구성 =================    
+        self.hp = 100
+        self.max_hp = 100
+        self.mp = 50
+        self.max_mp = 50
+        self.exp = 0  
+        #================================= UI ,공격 추가==============================
+        self.ui = PlayerUI(self)
+        self.magic_attack = MagicAttack()  # 공격 인스턴스 추가
+        self.attack_cooldown_time = 0.5  # 공격 모션 쿨타임 ex)s를 누르고 바로d를 못누르게 하기 위해
+        self.last_attack_end_time = 0  # 마지막 공격 종료 시간
 
     #==========================================행동이미지 로드==========================================
-    def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file):
+    def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
         self.walk_right_image = gfw.image.load(walk_right_image_file)
         self.idle_image = gfw.image.load(idle_image_file)
+        self.attack_image = gfw.image.load(attack_image_file)  
         self.dash_image_left = gfw.image.load('dash.png')
         self.jump_image = gfw.image.load('jump.png')
         self.double_jump_image = gfw.image.load('jump2.png')
@@ -67,18 +83,27 @@ class Player:
         self.double_jump_fps = config.PLAYER_DOUBLE_JUMP_FPS
         self.double_jump_frame_count = config.PLAYER_DOUBLE_JUMP_FRAME_COUNT
         self.double_jump_time = 0
+        # =================================공격 추가==============================
+        self.is_attacking = False  # 공격 상태 설정
+        self.attack_time = 0
+        self.attack_duration = config.ATTACK_DURATION  
 
     #==========================================행동 업데이트==========================================
     def update(self):
         self.time += gfw.frame_time
         if self.is_dashing:
             self.update_dash()
+        elif self.is_attacking:
+            self.update_attack()  
         else:
             self.update_movement()
             self.update_jump()
         
-        if self.weapon_equipped and self.weapon: #무기업데이트 추가
+        if self.weapon_equipped and self.weapon: 
             self.weapon.update(self)
+        else:
+            self.magic_attack.update()  # 무기가 없을 때 기본 공격 업데이트
+        self.ui.update()
 
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
@@ -153,12 +178,16 @@ class Player:
         else:
             if self.is_dashing:
                 self.draw_dash()
+            elif self.is_attacking:
+                self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')
             elif self.is_jumping:
                 self.draw_jump()
             else:
                 x = self.frame * self.frame_width
                 y = self.action * self.frame_height
                 self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
+        self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')  # 마법 공격 그리기
+        self.ui.draw()
 
     #==========================================대쉬 그리기==========================================
     def draw_dash(self):
@@ -176,6 +205,7 @@ class Player:
             # 왼쪽 대쉬: dash.png를 그대로 사용
             self.dash_image_left.clip_draw(x, 0, frame_width, frame_height, self.x, self.y)
 
+    # =============================== 점프 그리기 ===============================
     def draw_jump(self):
         if not self.can_double_jump:
             x = self.double_jump_frame * config.WALK_FRAME_WIDTH
@@ -193,6 +223,22 @@ class Player:
                 config.WALK_FRAME_WIDTH, config.WALK_FRAME_HEIGHT
             )
 
+    #==========================================공격 업데이트==========================================
+
+    def update_attack(self):
+        self.attack_time += gfw.frame_time
+        if self.attack_time >= self.attack_duration:
+            self.is_attacking = False
+            self.last_attack_end_time = time.time()  # 공격 종료 시간 기록
+        else:
+            fps = config.ATTACK_FPS  # 공격 애니메이션 FPS
+            frame_count = config.ATTACK_FRAME_COUNT  # 공격 애니메이션 프레임 수
+            self.frame = int(self.attack_time * fps) % frame_count
+
+    def draw_attack(self):
+        x = self.frame * self.frame_width
+        self.attack_image.clip_draw(x, 0, self.frame_width, self.frame_height, self.x, self.y)
+
     #==========================================키 이벤트==========================================
     def handle_event(self, e):
         if e.type == SDL_KEYDOWN:
@@ -202,7 +248,7 @@ class Player:
 
     def handle_keydown(self, e):
         current_time = time.time()  # 대쉬를 위한 시간
-        if e.key in (SDLK_LEFT, SDLK_RIGHT): #걷는 방향 
+        if e.key in (SDLK_LEFT, SDLK_RIGHT): # 걷는 방향 
             direction = -1 if e.key == SDLK_LEFT else 1
             
             # =================대쉬 조건 =================
@@ -216,7 +262,7 @@ class Player:
             # =================이동 방향 및 시간 업데이트=================
             self.dx = direction
             self.last_key_time = current_time  # 마지막 키 입력 시간 기록
-            self.last_direction = direction  # 마지막 방향 업데이트
+            self.last_direction = direction  # 
 
         # =================점프 처리=================
         elif e.key == SDLK_UP:
@@ -230,7 +276,7 @@ class Player:
 
         # 아래 방향키 입력 처리
         elif e.key == SDLK_DOWN:
-            self.dy = -1  #추후 삭제 예정
+            self.dy = -1  # 추후 삭제 예정
 
         # 대쉬 키 입력 처리
         elif e.key == SDLK_LSHIFT:
@@ -238,9 +284,25 @@ class Player:
                 self.is_dashing = True  
                 self.dash_time = 0  
 
-        # ============== 무기 장착/해제 처리 ============== 
-        elif e.key == SDLK_u:
+        # =============================== 무기 공격 키처리 ===============================
+        elif e.key == SDLK_u:         #무기를 착용했을때만 공격 키 처리
             self.toggle_weapon()
+
+        elif e.key == SDLK_s:  # S 키로 약한공격
+            if self.weapon_equipped and self.weapon and not self.is_attacking:
+                if (current_time - self.last_attack_end_time >= self.attack_cooldown_time and
+                    current_time - self.weapon.magic_attack.last_attack_time >= self.weapon.magic_attack.attack_cooldown):
+                    self.weapon.magic_attack.start_attack(self.x, self.y, 1 if self.dx > 0 else -1)
+                    self.is_attacking = True
+                    self.attack_time = 0
+
+        elif e.key == SDLK_d:  # D 키로 강한공격
+            if self.weapon_equipped and self.weapon and not self.is_attacking:
+                if (current_time - self.last_attack_end_time >= self.attack_cooldown_time and
+                    current_time - self.weapon.magic_attack.last_attack_time2 >= self.weapon.magic_attack.attack_cooldown2):
+                    self.weapon.magic_attack.start_attack2(self.x, self.y, 1 if self.dx > 0 else -1)
+                    self.is_attacking = True
+                    self.attack_time = 0
 
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
@@ -250,6 +312,7 @@ class Player:
         elif e.key == SDLK_DOWN and self.dy < 0:
             self.dy = 0
 
+#==========================================무기 장착/해제 처리==========================================
     def toggle_weapon(self):
         if self.weapon_equipped:
             self.weapon_equipped = False
@@ -259,5 +322,5 @@ class Player:
             self.weapon = Weapon()  
 
 class CustomPlayer(Player):
-    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png'):
-        super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file)
+    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png'):
+        super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
