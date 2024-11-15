@@ -64,7 +64,7 @@ class MagicAttack:
     # ========================= 투사체 관련 구체적 설정 딕션어리로 데이터 관리  =========================
     def fire_b_attack(self, x, y, direction, image, frame_count, frame_width, frame_height, fps, max_range):
         b_attack = {
-            'x': x,
+            'x': x + (frame_width if direction > 0 else 0), #오른쪽방향에는 오른쪽 위치에 공격좌표고정
             'y': y,
             'start_x': x,
             'direction': direction,
@@ -126,7 +126,7 @@ class MagicAttack:
 
         for b_attack in self.b_attacks:
             frame_x = b_attack['current_frame'] * b_attack['frame_width']
-            # 방향에 따라 x 좌표 조정 및 이미지 반전
+            # 방향에 따라 x 좌표 조정 및 이미지 반전  ->오른쪽 방향에 공격사거리 짧아지는 버그 수정
             if b_attack['direction'] > 0:
                 draw_x = b_attack['x']
                 flip_direction = 'h'  # 수평 반전
