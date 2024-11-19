@@ -2,6 +2,9 @@ import gfw.image as image
 from pico2d import draw_rectangle
 from player import Player
 
+bb_width = 763
+bb_height = 280
+
 #===============================타일클래스 도입==========================================
 class TileMap:
     def __init__(self, tile_images, tile_map_data, tile_size, player):
@@ -26,18 +29,28 @@ class TileMap:
             row = self.tile_map_data[y]
             for x in range(len(row)):
                 tile_index = row[x]
-                if tile_index == 1:  # 타일1 일때 
+                if tile_index == 1:  #타일 1이미지 
                     tile_x = x * self.tile_size + self.tile_size // 2 + self.x_offset
                     tile_y = y * self.tile_size + self.tile_size // 2
-                    half_width = 763 // 2
-                    half_height = 320 // 2
+                    half_width = bb_width // 2
+                    half_height = bb_height // 2
 
                     # 충돌 체크
                     if (player_x - player_half_width < tile_x + half_width and
                         player_x + player_half_width > tile_x - half_width and
                         player_y - player_half_height < tile_y + half_height and
                         player_y + player_half_height > tile_y - half_height):
-                        print("충돌 발생!")  # 우선 메세지로 잘되나 확인
+                        # 플레이어가 타일 위에 서 있도록 위치 조정
+
+                        if self.player.velocity_y <= 0:  
+                            self.player.y = tile_y + half_height + player_half_height  
+                            self.player.velocity_y = 0  
+                            
+                        #================ player.py의 변수를 가져와서 행동을 유지하도록 함================
+                            self.player.can_move = True  
+                            self.player.can_double_jump = True  
+                            self.player.is_jumping = False  
+                            self.player.current_image = self.player.idle_image  
 
 #======================== 타일 그리기 ======================
     def draw(self):
@@ -53,8 +66,8 @@ class TileMap:
 
                     # 타일1에 바운딩 박스 그리기
                     if tile_index == 1:
-                        half_width = 763 // 2
-                        half_height = 320 // 2
+                        half_width = bb_width // 2
+                        half_height = bb_height // 2
                         draw_rectangle(tile_x - half_width, tile_y - half_height,
                                        tile_x + half_width, tile_y + half_height)
 
@@ -67,9 +80,7 @@ def get_tile_map():
 
     
     tile_map_data = [
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],   # (9, 0): 타일1
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],   # (9, 0): 타일1
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]   # (9, 0): 타일1
+        [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
     ]
 
     return tile_images, tile_map_data
