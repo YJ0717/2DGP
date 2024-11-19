@@ -105,6 +105,18 @@ class Player:
             self.magic_attack.update()  # 무기가 없을 때 기본 공격 업데이트
         self.ui.update()
 
+        # ========================================플레이어가 타일에 따라 움직이기 위해  y축 위치를 계속 떨어지게 함==============================
+        if not self.is_jumping:  # 점프 중이 아닐 때만 중력 적용
+            self.velocity_y += self.gravity  # 중력 적용
+            self.y += self.velocity_y  # y 위치 업데이트
+
+            # 바닥에 닿았는지 확인
+            if self.y < 0:  
+                self.y = 0  
+                self.velocity_y = 0  
+                self.is_jumping = False  
+                self.can_double_jump = True  
+
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
         self.dash_time += gfw.frame_time
@@ -161,20 +173,27 @@ class Player:
         if self.is_jumping:
             self.y += self.velocity_y
             self.velocity_y += self.gravity
-            if self.y <= self.start_y:
-                self.y = self.start_y
-                self.is_jumping = False
-                self.can_double_jump = True
-                self.double_jump_time = 0
-            if not self.can_double_jump:
-                self.double_jump_time += gfw.frame_time
-                self.double_jump_frame = round(self.double_jump_time * config.DOUBLE_JUMP_FPS) % self.double_jump_frame_count
+            
+            # 바닥에 닿았는지 확인
+            if self.y <= 0:  # 바닥에 닿았을 때
+                self.y = 0  # y 위치를 0으로 설정
+                self.is_jumping = False  # 점프 상태 초기화
+                self.can_double_jump = True  # 더블 점프 가능 상태로 설정
+                self.velocity_y = 0  # 속도 초기화
+            else:
+                # 점프 중일 때는 y 위치를 계속 업데이트
+                self.start_y = self.y  # 현재 y 위치를 start_y로 설정
 
     #==========================================그리기========================================== 
     def draw(self):
         if self.weapon_equipped and self.weapon:
             # 무기가 장착된 경우 캐릭터 이미지를 그리지 않고 무기만 그리기
             self.weapon.draw(self.x, self.y, 'h' if self.dx > 0 else '')
+            # 바운딩 박스 그리기 (무기를 든 경우, 기본 캐릭터 크기 사용)
+            half_width = config.IDLE_FRAME_WIDTH // 2  # 기본 캐릭터 크기
+            half_height = config.IDLE_FRAME_HEIGHT // 2  # 기본 캐릭터 크기
+            draw_rectangle(self.x - half_width, self.y - half_height,
+                           self.x + half_width, self.y + half_height)
         else:
             if self.is_dashing:
                 self.draw_dash()
@@ -186,6 +205,13 @@ class Player:
                 x = self.frame * self.frame_width
                 y = self.action * self.frame_height
                 self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
+                
+            # 바운딩 박스 그리기 (무기를 들지 않은 경우)
+            half_width = self.frame_width // 2
+            half_height = self.frame_height // 2
+            draw_rectangle(self.x - half_width, self.y - half_height,
+                           self.x + half_width, self.y + half_height)
+
         self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')  # 마법 공격 그리기
         self.ui.draw()
 
@@ -194,7 +220,7 @@ class Player:
         frame_width, frame_height = config.DASH_FRAME_SIZES[self.dash_frame]
         x = self.dash_frame * frame_width
         if self.dx > 0:
-            # 오른쪽 대쉬: dash.png를 수평 반전하여 사용
+            # 오른쪽 대: dash.png를 수평 반전하여 사용
             self.dash_image_left.clip_composite_draw(
                 x, 0, frame_width, frame_height,
                 0, 'h',  # h는 수평 반전을 의미
@@ -320,7 +346,20 @@ class Player:
         else:   
             self.weapon_equipped = True
             self.weapon = Weapon()  
+#==========================================플레이어 바운딩 박스 처리==========================================
+    def get_bounding_box(self):
+        half_width = self.frame_width // 2
+        half_height = self.frame_height // 2
+        return (self.x - half_width, self.y - half_height, self.x + half_width, self.y + half_height)
 
+#============================================바운딩박스 매소드 추가 ========================================
 class CustomPlayer(Player):
     def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png'):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
+        self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
+        self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
+
+    def get_bounding_box(self):
+        half_width = self.frame_width // 2
+        half_height = self.frame_height // 2
+        return (self.x - half_width, self.y - half_height, self.x + half_width, self.y + half_height)
