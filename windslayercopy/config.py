@@ -49,7 +49,7 @@ SECOND_ATTACK_COOLDOWN = 1.5
 
 # ========================= 플레이어 속성 설정 =========================
 PLAYER_START_X = 100
-PLAYER_START_Y = 100
+PLAYER_START_Y = 400 # y값 수정
 PLAYER_SPEED = 200
 PLAYER_JUMP_SPEED = 10
 PLAYER_GRAVITY = -0.5
