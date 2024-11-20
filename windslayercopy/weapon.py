@@ -3,6 +3,7 @@ import gfw
 import config
 import gfw.image as image
 from attack import MagicAttack
+from Skill.wind_skill import WindSkill
 
 class Weapon:
     #==============무기 이미지를 로드하고 초기 속성을 설정======================
@@ -10,6 +11,8 @@ class Weapon:
         self.load_images(walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file)
         self.init_attributes()
         self.magic_attack = MagicAttack(attack_image_file, attack_image_file2)
+        self.wind_skill = WindSkill()
+
     # =============================== 무기 이미지 로드 ===============================
     def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file):
         self.walk_left_image = image.load(walk_left_image_file)
@@ -35,6 +38,8 @@ class Weapon:
         self.time += gfw.frame_time
         if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
             self.magic_attack.update()
+        elif self.wind_skill.is_casting or self.wind_skill.is_skill_active:
+            self.wind_skill.update()
         elif player.is_dashing:
             self.update_dash(player)
         elif player.is_jumping:
@@ -101,6 +106,8 @@ class Weapon:
     def draw(self, x, y, flip='h'):
         if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
             self.magic_attack.draw(x, y, flip)
+        elif self.wind_skill.is_casting or self.wind_skill.is_skill_active:
+            self.wind_skill.draw(x, y, flip)
         else:
             x_offset = self.frame * self.frame_width
             self.current_image.clip_composite_draw(
@@ -108,3 +115,7 @@ class Weapon:
                 0, flip, x, y,
                 self.frame_width, self.frame_height
             )
+
+    def start_skill(self, x, y, direction):
+        if not self.wind_skill.is_casting and not self.wind_skill.is_skill_active:
+            self.wind_skill.start_cast(x, y, direction)
