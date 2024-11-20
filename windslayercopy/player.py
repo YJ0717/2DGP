@@ -330,6 +330,10 @@ class Player:
                     self.is_attacking = True
                     self.attack_time = 0
 
+        elif e.key == SDLK_2:  # 2 키로 스킬 발동
+            if self.weapon_equipped and self.weapon:
+                self.weapon.start_skill(self.x, self.y, 1 if self.dx > 0 else -1)
+
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
             self.dx = 0
