@@ -12,7 +12,7 @@ class Weapon:
         self.init_attributes()
         self.magic_attack = MagicAttack(attack_image_file, attack_image_file2)
         self.wind_skill = WindSkill()
-
+        #바람스킬 삽입
     # =============================== 무기 이미지 로드 ===============================
     def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file):
         self.walk_left_image = image.load(walk_left_image_file)
@@ -38,14 +38,18 @@ class Weapon:
         self.time += gfw.frame_time
         if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
             self.magic_attack.update()
-        elif self.wind_skill.is_casting or self.wind_skill.is_skill_active:
+            player.is_attacking = True  # 공격 중일 때 플레이어의 공격 상태 설정
+        elif self.wind_skill.is_casting:
             self.wind_skill.update()
+            player.is_attacking = True  # 스킬 사용 중일 때 플레이어의 공격 상태 설정
         elif player.is_dashing:
             self.update_dash(player)
         elif player.is_jumping:
             self.update_jump(player)
         else:
             self.update_movement(player)
+
+        self.wind_skill.projectiles = [p for p in self.wind_skill.projectiles if p.update()]
 
     # =============================== 대쉬 행동 업데이트 ===============================
     def update_dash(self, player):
@@ -72,6 +76,7 @@ class Weapon:
             frame_count = config.WEAPON_IDLE_FRAME_COUNT
 
         self.frame = round(self.time * fps) % frame_count
+
     # =============================== 점프 행동 업데이트 ===============================
     def update_jump(self, player):
         if player.can_double_jump:
@@ -102,11 +107,15 @@ class Weapon:
         if not self.magic_attack.is_attacking2:
             self.magic_attack.start_attack2()
             
+    # =============================== 바람스킬 행동 시작 ===============================
+    def start_skill(self, x, y, direction):
+        self.wind_skill.start_cast(x, y, direction)
+            
     # =============================== 공격 이미지 그리기 ===============================
     def draw(self, x, y, flip='h'):
         if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
             self.magic_attack.draw(x, y, flip)
-        elif self.wind_skill.is_casting or self.wind_skill.is_skill_active:
+        elif self.wind_skill.is_casting:
             self.wind_skill.draw(x, y, flip)
         else:
             x_offset = self.frame * self.frame_width
@@ -116,6 +125,5 @@ class Weapon:
                 self.frame_width, self.frame_height
             )
 
-    def start_skill(self, x, y, direction):
-        if not self.wind_skill.is_casting and not self.wind_skill.is_skill_active:
-            self.wind_skill.start_cast(x, y, direction)
+        for projectile in self.wind_skill.projectiles:
+            projectile.draw()
