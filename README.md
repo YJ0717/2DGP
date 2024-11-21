@@ -335,9 +335,9 @@ time.h로 대쉬기능 구현해보기 완료 <br/>
 개발전 임시 설계 작성해보기 완료 <br/>
     
 ## 6. 주별 commit 수를 주차별 표로 만들어 포함할 것 <br/>
+![20241121_215510](https://github.com/user-attachments/assets/37aa4f1a-682b-459c-a677-fbb01d15959a) <br/>
 ![insight-commit](https://github.com/user-attachments/assets/d8fb4701-a0a9-4276-86cf-d7f9ae8a459b) <br/>
 ![commit](https://github.com/user-attachments/assets/77240c3d-8594-4a2a-8063-5284d89a921d) <br/>
-![pulse](https://github.com/user-attachments/assets/e1ce2b0e-8b20-4897-b7c6-bac34e064a6a) <br/>
 
 ## 7. 구현하면서 특히 어려웠던/어려운 부분, 수업에서 추가로 다루었으면 하는 것 <br/>
 
