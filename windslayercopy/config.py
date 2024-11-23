@@ -103,13 +103,16 @@ WEAPON_DOUBLE_JUMP_FRAME_HEIGHT = 150
 WEAPON_DOUBLE_JUMP_FPS = 2
 WEAPON_DOUBLE_JUMP_FRAME_COUNT = 2
 
-# ========================= 스킬시전 행동  =========================
+#===================================================스킬 시전 설정===================================================
+
+
+# ========================= 바람 스킬시전 행동  =========================
 WIND_CAST_FRAME_COUNT = 4
 WIND_CAST_FRAME_WIDTH = 140
 WIND_CAST_FRAME_HEIGHT = 230
 WIND_CAST_FPS = 8
 WIND_CAST_DURATION = 0.5
-#============= 스킬 투사체 관련 설정 =========================
+#============= 바람 스킬 투사체 관련 설정 =========================
 WIND_SKILL_FRAME_COUNT = 3
 WIND_SKILL_FRAME_WIDTH = 105
 WIND_SKILL_FRAME_HEIGHT = 140
@@ -118,6 +121,22 @@ WIND_SKILL_DURATION = 3
 WIND_SKILL_SPEED = 600
 WIND_SKILL_MAX_RANGE = 400  #바람스킬 최대 사거리
 WIND_SKILL_COOLDOWN = 2.0  #바람스킬 쿨타임
+
+# ========================= 얼음 스킬 시전 설정 =========================
+ICE_CAST_FRAME_COUNT = 4
+ICE_CAST_FRAME_WIDTH = 140
+ICE_CAST_FRAME_HEIGHT = 230
+ICE_CAST_FPS = 8
+ICE_CAST_DURATION = 0.5
+
+# ============= 얼음 스킬 투사체 관련 설정 =========================
+ICE_SKILL_FRAME_COUNT = 1
+ICE_SKILL_FRAME_WIDTH = 57
+ICE_SKILL_FRAME_HEIGHT = 67
+ICE_SKILL_FPS = 3
+ICE_SKILL_SPEED = 600
+ICE_SKILL_MAX_RANGE = 400
+ICE_SKILL_COOLDOWN = 2.0
 
 
 
