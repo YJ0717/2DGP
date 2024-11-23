@@ -334,6 +334,10 @@ class Player:
             if self.weapon_equipped and self.weapon:
                 self.weapon.start_skill(self.x, self.y, 1 if self.dx > 0 else -1)
 
+        elif e.key == SDLK_3:  # 3 키로 얼음 스킬 발동
+            if self.weapon_equipped and self.weapon:
+                self.weapon.start_ice_skill(self.x, self.y, 1 if self.dx > 0 else -1)
+
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
             self.dx = 0
