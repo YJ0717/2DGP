@@ -5,6 +5,7 @@ import time
 from weapon import Weapon  
 from ui import PlayerUI
 from attack import MagicAttack
+from Skill.fire_skill import FireSkill
 
 ############### 플레이어 캐릭터의 행동과 상태를 관리, Weapon 클래스를 사용하여 무기를 장착하고 공격전 행동 처리 ,MagicAttack 클래스를 통해  공격 투사체 처리#########
 ############################################################################################################################################################
@@ -26,6 +27,7 @@ class Player:
         self.magic_attack = MagicAttack()  # 공격 인스턴스 추가
         self.attack_cooldown_time = 0.5  # 공격 모션 쿨타임 ex)s를 누르고 바로d를 못누르게 하기 위해
         self.last_attack_end_time = 0  # 마지막 공격 종료 시간
+        self.fire_skill = FireSkill()
 
     #==========================================행동이미지 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
@@ -220,7 +222,7 @@ class Player:
         frame_width, frame_height = config.DASH_FRAME_SIZES[self.dash_frame]
         x = self.dash_frame * frame_width
         if self.dx > 0:
-            # 오른쪽 대: dash.png를 수평 반전하여 사용
+            # 오른쪽 대: dash.png를 수평 반전하��� 사용
             self.dash_image_left.clip_composite_draw(
                 x, 0, frame_width, frame_height,
                 0, 'h',  # h는 수평 반전을 의미
@@ -337,6 +339,10 @@ class Player:
         elif e.key == SDLK_3:  # 3 키로 얼음 스킬 발동
             if self.weapon_equipped and self.weapon:
                 self.weapon.start_ice_skill(self.x, self.y, 1 if self.dx > 0 else -1)
+
+        elif e.key == SDLK_4:  # 4 키로 불 스킬 발동
+            if self.weapon_equipped and self.weapon:
+                self.weapon.start_fire_skill(self.x, self.y, 1 if self.dx > 0 else -1)
 
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
