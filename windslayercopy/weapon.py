@@ -5,6 +5,7 @@ import gfw.image as image
 from attack import MagicAttack
 from Skill.wind_skill import WindSkill
 from Skill.ice_skill import IceSkill
+from Skill.fire_skill import FireSkill
 
 class Weapon:
     #==============무기 이미지를 로드하고 초기 속성을 설정======================
@@ -14,8 +15,8 @@ class Weapon:
         self.magic_attack = MagicAttack(attack_image_file, attack_image_file2)
         self.wind_skill = WindSkill()
         self.ice_skill = IceSkill()
-        #바람스킬 삽입
-        #얼음스킬 삽입
+        self.fire_skill = FireSkill()
+
     # =============================== 무기 이미지 로드 ===============================
     def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file):
         self.walk_left_image = image.load(walk_left_image_file)
@@ -48,6 +49,9 @@ class Weapon:
         elif self.ice_skill.is_casting:
             self.ice_skill.update()
             player.is_attacking = True
+        elif self.fire_skill.is_casting:
+            self.fire_skill.update()
+            player.is_attacking = True
         elif player.is_dashing:
             self.update_dash(player)
         elif player.is_jumping:
@@ -57,6 +61,7 @@ class Weapon:
 
         self.wind_skill.projectiles = [p for p in self.wind_skill.projectiles if p.update()]
         self.ice_skill.projectiles = [p for p in self.ice_skill.projectiles if p.update()]
+        self.fire_skill.projectiles = [p for p in self.fire_skill.projectiles if p.update()]
 
     # =============================== 대쉬 행동 업데이트 ===============================
     def update_dash(self, player):
@@ -121,6 +126,10 @@ class Weapon:
     # =============================== 얼음스킬 행동 시작 ===============================
     def start_ice_skill(self, x, y, direction):
         self.ice_skill.start_cast(x, y, direction)
+
+    # =============================== 불 스킬 행동 시작 ===============================
+    def start_fire_skill(self, x, y, direction):
+        self.fire_skill.start_cast(x, y, direction)
             
     # =============================== 공격 이미지 그리기 ===============================
     def draw(self, x, y, flip='h'):
@@ -130,6 +139,8 @@ class Weapon:
             self.wind_skill.draw(x, y, flip)
         elif self.ice_skill.is_casting:
             self.ice_skill.draw(x, y, flip)
+        elif self.fire_skill.is_casting:
+            self.fire_skill.draw(x, y, flip)
         else:
             x_offset = self.frame * self.frame_width
             self.current_image.clip_composite_draw(
@@ -141,4 +152,6 @@ class Weapon:
         for projectile in self.wind_skill.projectiles:
             projectile.draw()
         for projectile in self.ice_skill.projectiles:
+            projectile.draw()
+        for projectile in self.fire_skill.projectiles:
             projectile.draw()
