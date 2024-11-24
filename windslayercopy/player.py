@@ -356,6 +356,10 @@ class Player:
             if self.weapon_equipped and self.weapon:
                 self.weapon.start_blizzard_skill(self.x, self.y, 1 if self.dx > 0 else -1)
 
+        elif e.key == SDLK_r:  # R 키로 핵 스킬 발동
+            if self.weapon_equipped and self.weapon:
+                self.weapon.start_nuclear_skill(self.x, self.y, 1 if self.dx > 0 else -1)
+
     def handle_keyup(self, e):
         if e.key == SDLK_LEFT and self.dx < 0:
             self.dx = 0
