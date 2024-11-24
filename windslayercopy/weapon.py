@@ -6,6 +6,8 @@ from attack import MagicAttack
 from Skill.wind_skill import WindSkill
 from Skill.ice_skill import IceSkill
 from Skill.fire_skill import FireSkill
+from Skill.stone_skill import StoneSkill
+from Skill.blizzard_skill import BlizzardSkill
 
 class Weapon:
     #==============무기 이미지를 로드하고 초기 속성을 설정======================
@@ -16,6 +18,8 @@ class Weapon:
         self.wind_skill = WindSkill()
         self.ice_skill = IceSkill()
         self.fire_skill = FireSkill()
+        self.stone_skill = StoneSkill()
+        self.blizzard_skill = BlizzardSkill()
 
     # =============================== 무기 이미지 로드 ===============================
     def load_images(self, walk_left_image_file, idle_image_file, dash_image_file, jump_image_file, double_jump_image_file, attack_image_file):
@@ -52,6 +56,12 @@ class Weapon:
         elif self.fire_skill.is_casting:
             self.fire_skill.update()
             player.is_attacking = True
+        elif self.stone_skill.is_casting:
+            self.stone_skill.update()
+            player.is_attacking = True
+        elif self.blizzard_skill.is_casting:
+            self.blizzard_skill.update()
+            player.is_attacking = True
         elif player.is_dashing:
             self.update_dash(player)
         elif player.is_jumping:
@@ -62,6 +72,8 @@ class Weapon:
         self.wind_skill.projectiles = [p for p in self.wind_skill.projectiles if p.update()]
         self.ice_skill.projectiles = [p for p in self.ice_skill.projectiles if p.update()]
         self.fire_skill.projectiles = [p for p in self.fire_skill.projectiles if p.update()]
+        self.stone_skill.projectiles = [p for p in self.stone_skill.projectiles if p.update()]
+        self.blizzard_skill.projectiles = [p for p in self.blizzard_skill.projectiles if p.update()]
 
     # =============================== 대쉬 행동 업데이트 ===============================
     def update_dash(self, player):
@@ -130,7 +142,15 @@ class Weapon:
     # =============================== 불 스킬 행동 시작 ===============================
     def start_fire_skill(self, x, y, direction):
         self.fire_skill.start_cast(x, y, direction)
-            
+
+    # =============================== 땅 스킬 행동 시작 ===============================
+    def start_stone_skill(self, x, y, direction):
+        self.stone_skill.start_cast(x, y, direction)
+
+    # =============================== 블리자드 스킬 행동 시작 ===============================
+    def start_blizzard_skill(self, x, y, direction):
+        self.blizzard_skill.start_cast(x, y, direction)
+
     # =============================== 공격 이미지 그리기 ===============================
     def draw(self, x, y, flip='h'):
         if self.magic_attack.is_attacking or self.magic_attack.is_attacking2:
@@ -141,6 +161,10 @@ class Weapon:
             self.ice_skill.draw(x, y, flip)
         elif self.fire_skill.is_casting:
             self.fire_skill.draw(x, y, flip)
+        elif self.stone_skill.is_casting:
+            self.stone_skill.draw(x, y, flip)
+        elif self.blizzard_skill.is_casting:
+            self.blizzard_skill.draw(x, y, flip)
         else:
             x_offset = self.frame * self.frame_width
             self.current_image.clip_composite_draw(
@@ -154,4 +178,8 @@ class Weapon:
         for projectile in self.ice_skill.projectiles:
             projectile.draw()
         for projectile in self.fire_skill.projectiles:
+            projectile.draw()
+        for projectile in self.stone_skill.projectiles:
+            projectile.draw()
+        for projectile in self.blizzard_skill.projectiles:
             projectile.draw()
