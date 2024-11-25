@@ -1,3 +1,5 @@
+from pico2d import *  
+import gfw
 import gfw.image as image
 from pico2d import draw_rectangle
 from player import Player
@@ -13,10 +15,21 @@ class TileMap:
         self.tile_size = tile_size
         self.x_offset = 0
         self.player = player
-# ====================충돌처리를 위한 업데이트 ================
+        #===============================포탈 도입==========================================
+        self.portal_image = image.load('portal.png')  
+        self.portal_animation_frame = 0  
+        self.portal_animation_speed = 10  
+
+# ====================충돌처리 및 애니메이션을 위한 업데이트 ================
     def update(self):
-        self.x_offset = -self.player.x
+        self.x_offset = -self.player.x  
         self.check_collision()
+        self.update_portal_animation()  
+
+    def update_portal_animation(self):
+        self.portal_animation_frame += gfw.frame_time * self.portal_animation_speed
+        if self.portal_animation_frame >= 4:  # 애니메션 프레임 수에 따라 조정
+            self.portal_animation_frame = 0
 
 #======================== 충돌처리 ======================
     def check_collision(self):
@@ -64,12 +77,14 @@ class TileMap:
                     tile_y = y * self.tile_size + self.tile_size // 2
                     tile_image.draw(tile_x, tile_y)
 
-                    # 타일1에 바운딩 박스 그리기
-                    if tile_index == 1:
-                        half_width = bb_width // 2
-                        half_height = bb_height // 2
-                        draw_rectangle(tile_x - half_width, tile_y - half_height,
-                                       tile_x + half_width, tile_y + half_height)
+        
+        portal_x = 2400 + self.x_offset  # 플레이어의 x_offset을 추가야만 포탈이 고정된 위치에 존재
+        portal_y = 230   
+        self.portal_image.clip_draw(
+            int(self.portal_animation_frame) * self.portal_image.w // 4, 0,
+            self.portal_image.w // 4, self.portal_image.h,
+            portal_x, portal_y
+        )
 
 def get_tile_map():
     # 타일 이미지 로드
