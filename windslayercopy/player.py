@@ -93,6 +93,7 @@ class Player:
         self.is_attacking = False  # 공격 상태 설정
         self.attack_time = 0
         self.attack_duration = config.ATTACK_DURATION  
+        self.near_portal = False  # 포탈 근처에 있는지 여부
 
     #==========================================행동 업데이트==========================================
     def update(self):
@@ -298,13 +299,16 @@ class Player:
 
         # =================점프 처리=================
         elif e.key == SDLK_UP:
-            if not self.is_jumping:
-                self.is_jumping = True  
-                self.velocity_y = self.jump_speed  
+            if self.near_portal:
+                import Map.stage_2 as stage_2
+                gfw.change(stage_2)
+            elif not self.is_jumping:
+                self.is_jumping = True
+                self.velocity_y = self.jump_speed
             elif self.can_double_jump:
-                self.can_double_jump = False  
-                self.velocity_y = self.jump_speed 
-                self.double_jump_time = 0  
+                self.can_double_jump = False
+                self.velocity_y = self.jump_speed
+                self.double_jump_time = 0
 
         # 아래 방향키 입력 처리
         elif e.key == SDLK_DOWN:
