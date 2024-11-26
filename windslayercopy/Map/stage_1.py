@@ -65,6 +65,20 @@ class TileMap:
                             self.player.is_jumping = False  
                             self.player.current_image = self.player.idle_image  
 
+        # 포탈 근처에 있는지 확인
+        portal_x = 2400 + self.x_offset
+        portal_y = 230
+        half_width = self.portal_image.w // 8
+        half_height = self.portal_image.h // 2
+
+        if (player_x - player_half_width < portal_x + half_width and
+            player_x + player_half_width > portal_x - half_width and
+            player_y - player_half_height < portal_y + half_height and
+            player_y + player_half_height > portal_y - half_height):
+            self.player.near_portal = True
+        else:
+            self.player.near_portal = False
+
 #======================== 타일 그리기 ======================
     def draw(self):
         for y in range(len(self.tile_map_data)):
