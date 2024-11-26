@@ -86,6 +86,12 @@ class TileMap:
             portal_x, portal_y
         )
 
+        # ==========================포탈 바운딩 박스 그리기==========================
+        half_width = self.portal_image.w // 8 
+        half_height = self.portal_image.h // 2 
+        draw_rectangle(portal_x - half_width, portal_y - half_height,
+                       portal_x + half_width, portal_y + half_height)  
+
 def get_tile_map():
     # 타일 이미지 로드
     tile_images = [
