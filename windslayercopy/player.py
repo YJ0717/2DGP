@@ -392,8 +392,15 @@ class CustomPlayer(Player):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
         self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
         self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
+        # =========weapon 인스턴스 생성하여 무기장착을 활성화 하고 무기장착을 트루로 설정 스테이지 2에서 항상 무기를끼게 위해=========
+        self.weapon = Weapon()  
+        self.weapon_equipped = True  
 
     def get_bounding_box(self):
         half_width = self.frame_width // 2
         half_height = self.frame_height // 2
         return (self.x - half_width, self.y - half_height, self.x + half_width, self.y + half_height)
+
+    def equip_weapon(self):
+        if self.weapon is None:
+            self.weapon = Weapon()  # Weapon 클래스의 인스턴스를 생성하여 무기 장착
