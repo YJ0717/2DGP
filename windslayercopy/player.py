@@ -175,6 +175,9 @@ class Player:
         if 0 <= new_y <= get_canvas_height():
             self.y = new_y
 
+        # 플레이어 좌표 출력
+        print(f"플레이어 좌표: x={self.x}, y={self.y}")
+
     #==========================================점프 업데이트==========================================
     def update_jump(self):
         if self.is_jumping:
