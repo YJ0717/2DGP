@@ -388,13 +388,15 @@ class Player:
 
 #============================================바운딩박스 매소드 추가 ========================================
 class CustomPlayer(Player):
-    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png'):
+    def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png', equip_weapon=False):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
         self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
         self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
-        # =========weapon 인스턴스 생성하여 무기장착을 활성화 하고 무기장착을 트루로 설정 스테이지 2에서 항상 무기를끼게 위해=========
-        self.weapon = Weapon()  
-        self.weapon_equipped = True  
+        if equip_weapon:
+            self.weapon = Weapon()  # Weapon 클래스의 인스턴스를 생성하여 무기 장착
+            self.weapon_equipped = True
+        else:
+            self.weapon = None
 
     def get_bounding_box(self):
         half_width = self.frame_width // 2

@@ -20,8 +20,7 @@ class Background:
 
 def enter():
     global player, background, tile_map
-    player = CustomPlayer()
-    player.equip_weapon()
+    player = CustomPlayer(equip_weapon=True)
     background = Background()
     tile_images, tile_map_data = get_tile_map()
     tile_map = TileMap(tile_images, tile_map_data, 32, player)
