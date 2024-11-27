@@ -19,17 +19,38 @@ class TileMap:
         self.portal_image = image.load('portal.png')  
         self.portal_animation_frame = 0  
         self.portal_animation_speed = 10  
+        #===============================NPC 도입==========================================
+        self.npc_image = image.load('npc_01.png')  # NPC 이미지 로드
+        self.npc_x = 1000  # 실제 게임상의 좌표에서는 500  x_offset을 더하기때문에 
+        self.npc_y = 250  
+        self.npc_frame = 0
+        self.npc_frame_count = 3  
+        self.npc_frame_width = 50  
+        self.npc_frame_height = 180  
+        self.npc_fps = 2 
+        self.npc_time = 0
+
+        
+        self.npc_collision_x = 500
+        self.npc_collision_y = 232  
+
+        self.talk_image = image.load('npc_talk1.png')
 
 # ====================충돌처리 및 애니메이션을 위한 업데이트 ================
     def update(self):
         self.x_offset = -self.player.x  
         self.check_collision()
         self.update_portal_animation()  
+        self.update_npc_animation()
 
     def update_portal_animation(self):
         self.portal_animation_frame += gfw.frame_time * self.portal_animation_speed
         if self.portal_animation_frame >= 4:  # 애니메션 프레임 수에 따라 조정
             self.portal_animation_frame = 0
+
+    def update_npc_animation(self):
+        self.npc_time += gfw.frame_time
+        self.npc_frame = int(self.npc_time * self.npc_fps) % self.npc_frame_count
 
 #======================== 충돌처리 ======================
     def check_collision(self):
@@ -79,6 +100,17 @@ class TileMap:
         else:
             self.player.near_portal = False
 
+        # ================== NPC와의 충돌 체크 =======================
+        npc_half_width = self.npc_frame_width // 2
+        npc_half_height = self.npc_frame_height // 2
+        if (player_x - player_half_width < self.npc_collision_x + npc_half_width and
+            player_x + player_half_width > self.npc_collision_x - npc_half_width and
+            player_y - player_half_height < self.npc_collision_y + npc_half_height and
+            player_y + player_half_height > self.npc_collision_y - npc_half_height):
+            self.player.near_npc = True
+        else:
+            self.player.near_npc = False
+
 #======================== 타일 그리기 ======================
     def draw(self):
         for y in range(len(self.tile_map_data)):
@@ -105,6 +137,14 @@ class TileMap:
         half_height = self.portal_image.h // 2 
         draw_rectangle(portal_x - half_width, portal_y - half_height,
                        portal_x + half_width, portal_y + half_height)  
+
+        npc_x_offset = self.npc_frame * self.npc_frame_width
+        self.npc_image.clip_draw(npc_x_offset, 0, self.npc_frame_width, self.npc_frame_height,
+                                 self.npc_x + self.x_offset, self.npc_y)
+
+        # 말풍선 
+        if self.player.near_npc:
+            self.talk_image.draw(self.npc_x + self.x_offset, self.npc_y + self.npc_frame_height + 20)
 
 def get_tile_map():
     # 타일 이미지 로드
