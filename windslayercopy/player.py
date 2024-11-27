@@ -305,6 +305,8 @@ class Player:
             if self.near_portal:
                 import Map.stage_2 as stage_2
                 gfw.change(stage_2)
+            elif self.near_npc2:  # NPC2와의 충돌 범위 내에 있을 때
+                self.talk_to_npc2 = True  # NPC2와 대화 시작
             elif not self.is_jumping:
                 self.is_jumping = True
                 self.velocity_y = self.jump_speed
@@ -324,7 +326,7 @@ class Player:
                 self.dash_time = 0  
 
         # =============================== 무기 공격 키처리 ===============================
-        elif e.key == SDLK_u:         #무기를 착용했을때만 공격 키 처리
+        elif e.key == SDLK_u:  # 무기를 착용했을때만 공격 키 처리
             self.toggle_weapon()
 
         elif e.key == SDLK_s:  # S 키로 약한공격
@@ -377,6 +379,9 @@ class Player:
 
 #==========================================무기 장착/해제 처리==========================================
     def toggle_weapon(self):
+        if not self.talk_to_npc2:  # NPC2와 대화하기 전에는 무기 장착 불가
+            return
+
         if self.weapon_equipped:
             self.weapon_equipped = False
             self.weapon = None
@@ -395,6 +400,8 @@ class CustomPlayer(Player):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
         self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
         self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
+        self.talk_to_npc2 = False  # 두 번째 NPC와의 대화 상태 초기화
+        self.near_npc2 = False  # 두 번째 NPC와의 충돌 상태 초기화
         if equip_weapon:
             self.weapon = Weapon()  # Weapon 클래스의 인스턴스를 생성하여 무기 장착
             self.weapon_equipped = True
