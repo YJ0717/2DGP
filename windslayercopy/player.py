@@ -8,6 +8,7 @@ from attack import MagicAttack
 from Skill.fire_skill import FireSkill
 from Skill.stone_skill import StoneSkill
 from Skill.blizzard_skill import BlizzardSkill
+from enemy.enemy_01 import Enemy_01
 
 ############### 플레이어 캐릭터의 행동과 상태를 관리, Weapon 클래스를 사용하여 무기를 장착하고 공격전 행동 처리 ,MagicAttack 클래스를 통해  공격 투사체 처리#########
 ############################################################################################################################################################
@@ -377,6 +378,14 @@ class Player:
         elif e.key == SDLK_DOWN and self.dy < 0:
             self.dy = 0
 
+    #==========================================플레이어와 적의 충돌 처리==========================================  
+    def handle_collision(self, group, other):
+        if group == 'player:enemy':
+            if isinstance(other, Enemy_01):
+                if other.state == Enemy_01.ATTACK:
+                    # 적의 공격에 맞았을 때
+                    self.hp -= max(0, other.attack_power - self.defense)
+
 #==========================================무기 장착/해제 처리==========================================
     def toggle_weapon(self):
         if not self.talk_to_npc2:  # NPC2와 대화하기 전에는 무기 장착 불가
@@ -403,7 +412,7 @@ class CustomPlayer(Player):
         self.talk_to_npc2 = False  # 두 번째 NPC와의 대화 상태 초기화
         self.near_npc2 = False  # 두 번째 NPC와의 충돌 상태 초기화
         if equip_weapon:
-            self.weapon = Weapon()  # Weapon 클래스의 인스턴스를 생성하여 무기 장착
+            self.weapon = Weapon()  
             self.weapon_equipped = True
         else:
             self.weapon = None
@@ -415,4 +424,4 @@ class CustomPlayer(Player):
 
     def equip_weapon(self):
         if self.weapon is None:
-            self.weapon = Weapon()  # Weapon 클래스의 인스턴스를 생성하여 무기 장착
+            self.weapon = Weapon()  
