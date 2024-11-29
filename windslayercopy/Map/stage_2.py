@@ -2,8 +2,9 @@ from pico2d import *
 import gfw
 from player import CustomPlayer
 import config
+from enemy.enemy_01 import Enemy_01
 
-world = gfw.World(['background', 'tile', 'player'])
+world = gfw.World(['background', 'tile', 'enemy', 'player'])
 
 class Background:
     def __init__(self):
@@ -20,16 +21,32 @@ class Background:
         self.image.draw_to_origin(self.x, self.y, 3000, 1250)
 
 def enter():
-    global player, background, tile_map
+    global player, background, tile_map, enemies
     player = CustomPlayer(equip_weapon=True)
     player.x = config.PLAYER_START_X
     player.y = config.PLAYER_START_Y 
     player.velocity_y = 0
+    
+    # ===== 적들 위치 설정 =====
+    enemies = [
+        Enemy_01(400, 400),  
+        Enemy_01(800, 400),  
+        Enemy_01(1200, 400)  
+    ]
+    
     background = Background()
     tile_images, tile_map_data = get_tile_map()
     tile_map = TileMap(tile_images, tile_map_data, 32, player)
+    
+    for enemy in enemies:
+        tile_map.check_enemy_collision(enemy)
+    
     world.append(background, world.layer.background)
     world.append(tile_map, world.layer.tile)
+    
+    for enemy in enemies:
+        world.append(enemy, world.layer.enemy)
+    
     world.append(player, world.layer.player)
 
 def exit():
@@ -40,6 +57,7 @@ def handle_event(e):
 
 def update():
     world.update()
+    check_collisions()
 
 def draw():
     world.draw()
@@ -60,7 +78,6 @@ def get_tile_map():
 
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -95,6 +112,7 @@ class TileMap:
         self.tile_map_data = tile_map_data
         self.tile_size = tile_size
         self.x_offset = 0
+        self.y_offset = 0
         self.player = player
         self.portal_image = gfw.image.load('portal.png')  
         self.portal_animation_frame = 0  
@@ -104,6 +122,13 @@ class TileMap:
         self.x_offset = -self.player.x
         self.y_offset = self.player.y - get_canvas_height() // 2
         self.check_collision()
+        
+        # 적들의 충돌 검사 시 y_offset 영향 받지 않도록 수정
+        for enemy in world.objects[world.layer.enemy]:
+            enemy.x = enemy.x  # x 위치는 그대로
+            enemy.y = enemy.y  # y 위치도 그대로 유지 (y_offset 미적용)
+            self.check_enemy_collision(enemy)
+        
         self.update_portal_animation()
 
     def update_portal_animation(self):
@@ -211,3 +236,62 @@ class TileMap:
 
         draw_rectangle(portal_x - half_width, portal_y - half_height,
                        portal_x + half_width, portal_y + half_height)
+
+# ==========================================몬스터와 타일간의 충돌처리   ==========================================
+    def check_enemy_collision(self, enemy):
+        enemy_x = enemy.x
+        enemy_y = enemy.y  
+        enemy_half_width = enemy.animations[enemy.state]['width'] // 2
+        enemy_half_height = enemy.animations[enemy.state]['height'] // 2
+
+        for y in range(len(self.tile_map_data)):
+            row = self.tile_map_data[y]
+            for x in range(len(row)):
+                tile_index = row[x]
+                if tile_index == 1:  
+                    tile_x = x * self.tile_size + self.tile_size // 2
+                    tile_y = y * self.tile_size + self.tile_size // 2
+                    half_width = 762 // 2  
+                    half_height = 281 // 2  
+
+                    if (enemy_x - enemy_half_width < tile_x + half_width and
+                        enemy_x + enemy_half_width > tile_x - half_width and
+                        enemy_y - enemy_half_height < tile_y + half_height and
+                        enemy_y + enemy_half_height > tile_y - half_height):
+                        if enemy.velocity_y <= 0:
+                            enemy.y = tile_y + half_height + enemy_half_height  
+                            enemy.velocity_y = 0
+
+                elif tile_index == 2:  # 다리
+                    tile_x = x * self.tile_size + self.tile_size // 2
+                    tile_y = y * self.tile_size + self.tile_size // 2
+                    half_width = 240 // 2  
+                    half_height = 26 // 2  
+
+                    if (enemy_x - enemy_half_width < tile_x + half_width and
+                        enemy_x + enemy_half_width > tile_x - half_width and
+                        enemy_y - enemy_half_height < tile_y + half_height and
+                        enemy_y + enemy_half_height > tile_y - half_height):
+                        if enemy.velocity_y <= 0:
+                            enemy.y = tile_y + half_height + enemy_half_height
+                            enemy.velocity_y = 0
+
+                elif tile_index == 3:  
+                    tile_x = x * self.tile_size + self.tile_size // 2
+                    tile_y = y * self.tile_size + self.tile_size // 2
+                    half_width = 400 // 2  
+                    half_height = 32 // 2  
+
+                    if (enemy_x - enemy_half_width < tile_x + half_width and
+                        enemy_x + enemy_half_width > tile_x - half_width and
+                        enemy_y - enemy_half_height < tile_y + half_height and
+                        enemy_y + enemy_half_height > tile_y - half_height):
+                        if enemy.velocity_y <= 0:
+                            enemy.y = tile_y + half_height + enemy_half_height
+                            enemy.velocity_y = 0
+                            return True
+        return False
+
+def check_collisions():
+    for enemy in world.objects[world.layer.enemy]:
+        tile_map.check_enemy_collision(enemy)
