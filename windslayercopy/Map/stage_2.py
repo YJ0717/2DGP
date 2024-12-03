@@ -29,7 +29,7 @@ def enter():
     
     # ===== 적들 위치 설정 =====
     enemies = [
-        Enemy_01(400, 400),  
+        Enemy_01(600, 900),  
         Enemy_01(800, 400),  
         Enemy_01(1200, 400)  
     ]
@@ -123,10 +123,9 @@ class TileMap:
         self.y_offset = self.player.y - get_canvas_height() // 2
         self.check_collision()
         
-        # 적들의 충돌 검사 시 y_offset 영향 받지 않도록 수정
         for enemy in world.objects[world.layer.enemy]:
-            enemy.x = enemy.x  # x 위치는 그대로
-            enemy.y = enemy.y  # y 위치도 그대로 유지 (y_offset 미적용)
+            enemy.x = enemy.x 
+            enemy.y = enemy.y  
             self.check_enemy_collision(enemy)
         
         self.update_portal_animation()
@@ -240,7 +239,7 @@ class TileMap:
 # ==========================================몬스터와 타일간의 충돌처리   ==========================================
     def check_enemy_collision(self, enemy):
         enemy_x = enemy.x
-        enemy_y = enemy.y  
+        enemy_y = enemy.y
         enemy_half_width = enemy.animations[enemy.state]['width'] // 2
         enemy_half_height = enemy.animations[enemy.state]['height'] // 2
 
@@ -248,25 +247,11 @@ class TileMap:
             row = self.tile_map_data[y]
             for x in range(len(row)):
                 tile_index = row[x]
-                if tile_index == 1:  
+                if tile_index == 1:
                     tile_x = x * self.tile_size + self.tile_size // 2
                     tile_y = y * self.tile_size + self.tile_size // 2
-                    half_width = 762 // 2  
-                    half_height = 281 // 2  
-
-                    if (enemy_x - enemy_half_width < tile_x + half_width and
-                        enemy_x + enemy_half_width > tile_x - half_width and
-                        enemy_y - enemy_half_height < tile_y + half_height and
-                        enemy_y + enemy_half_height > tile_y - half_height):
-                        if enemy.velocity_y <= 0:
-                            enemy.y = tile_y + half_height + enemy_half_height  
-                            enemy.velocity_y = 0
-
-                elif tile_index == 2:  # 다리
-                    tile_x = x * self.tile_size + self.tile_size // 2
-                    tile_y = y * self.tile_size + self.tile_size // 2
-                    half_width = 240 // 2  
-                    half_height = 26 // 2  
+                    half_width = 762 // 2
+                    half_height = 281 // 2
 
                     if (enemy_x - enemy_half_width < tile_x + half_width and
                         enemy_x + enemy_half_width > tile_x - half_width and
@@ -276,11 +261,25 @@ class TileMap:
                             enemy.y = tile_y + half_height + enemy_half_height
                             enemy.velocity_y = 0
 
-                elif tile_index == 3:  
+                elif tile_index == 2:  # 다리
                     tile_x = x * self.tile_size + self.tile_size // 2
                     tile_y = y * self.tile_size + self.tile_size // 2
-                    half_width = 400 // 2  
-                    half_height = 32 // 2  
+                    half_width = 240 // 2
+                    half_height = 26 // 2
+
+                    if (enemy_x - enemy_half_width < tile_x + half_width and
+                        enemy_x + enemy_half_width > tile_x - half_width and
+                        enemy_y - enemy_half_height < tile_y + half_height and
+                        enemy_y + enemy_half_height > tile_y - half_height):
+                        if enemy.velocity_y <= 0:
+                            enemy.y = tile_y + half_height + enemy_half_height
+                            enemy.velocity_y = 0
+
+                elif tile_index == 3:
+                    tile_x = x * self.tile_size + self.tile_size // 2
+                    tile_y = y * self.tile_size + self.tile_size // 2
+                    half_width = 400 // 2
+                    half_height = 32 // 2
 
                     if (enemy_x - enemy_half_width < tile_x + half_width and
                         enemy_x + enemy_half_width > tile_x - half_width and
