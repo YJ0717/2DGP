@@ -39,11 +39,11 @@ class Enemy_01:
         self.defense = enemy_config.ENEMY_01_DEFENSE
         
         self.animations = {
-            Enemy_01.IDLE: {'frame_count': 4, 'fps': enemy_config.ENEMY_01_IDLE_FPS, 'width': 100, 'height': 100},
-            Enemy_01.WALK: {'frame_count': 6, 'fps': enemy_config.ENEMY_01_WALK_FPS, 'width': 100, 'height': 100},
-            Enemy_01.ATTACK: {'frame_count': 6, 'fps': enemy_config.ENEMY_01_ATTACK_FPS, 'width': 120, 'height': 100},
-            Enemy_01.HIT: {'frame_count': 3, 'fps': enemy_config.ENEMY_01_HIT_FPS, 'width': 100, 'height': 100},
-            Enemy_01.DEAD: {'frame_count': 4, 'fps': enemy_config.ENEMY_01_DEAD_FPS, 'width': 100, 'height': 100}
+            Enemy_01.IDLE: {'frame_count': 2, 'fps': enemy_config.ENEMY_01_IDLE_FPS, 'width': 100, 'height': 100},
+            Enemy_01.WALK: {'frame_count': 5, 'fps': enemy_config.ENEMY_01_WALK_FPS, 'width': 100, 'height': 100},
+            Enemy_01.ATTACK: {'frame_count': 3, 'fps': enemy_config.ENEMY_01_ATTACK_FPS, 'width': 165, 'height': 100},
+            Enemy_01.HIT: {'frame_count': 2, 'fps': enemy_config.ENEMY_01_HIT_FPS, 'width': 100, 'height': 100},
+            Enemy_01.DEAD: {'frame_count': 3, 'fps': enemy_config.ENEMY_01_DEAD_FPS, 'width': 100, 'height': 100}
         }
         
         self.detect_range = enemy_config.ENEMY_01_DETECT_RANGE
@@ -69,26 +69,32 @@ class Enemy_01:
     def update_ai(self):
         if self.is_dead:
             self.state = Enemy_01.DEAD
+            self.current_image = self.dead_image
             return
             
-        # 플레이어와의 거리 계산
         player = self.get_player()
         if player is None:
             return
             
-        # 실제 월드 좌표 기준으로 거리 계산
+    #========================== 몬스터가 플레이어를 탐지 x,y모두 감지되어야 추격 ====================    
         world = gfw.top().world
         x_offset = -world.objects[world.layer.player][0].x
-        player_world_x = player.x - x_offset  # 플레이어의 실제 월드 좌표
-        distance = abs(self.x - player_world_x)
+        player_world_x = player.x - x_offset
+        player_world_y = player.y  # 플레이어의 y 좌표
+        
+        distance_x = abs(self.x - player_world_x)
+        distance_y = abs(self.y - player_world_y)
+        
+        y_detect_range = 300
         
         if self.state == Enemy_01.HIT:
+            self.current_image = self.hit_image
             return
             
-        if distance <= self.attack_range:
+        if distance_x <= self.attack_range and distance_y <= y_detect_range:
             self.handle_attack(player)
-        elif distance <= self.detect_range:
-            self.handle_chase(player_world_x)  # 실제 월드 좌표 전달
+        elif distance_x <= self.detect_range and distance_y <= y_detect_range:
+            self.handle_chase(player_world_x)
         else:
             self.handle_idle()
             
@@ -96,19 +102,22 @@ class Enemy_01:
         current_time = time.time()
         if current_time - self.last_attack_time >= self.attack_cooldown:
             self.state = Enemy_01.ATTACK
+            self.current_image = self.attack_image
             self.last_attack_time = current_time
             
     def handle_chase(self, player_world_x):
         self.state = Enemy_01.WALK
+        self.current_image = self.walk_image
         self.direction = 1 if player_world_x > self.x else -1
         self.dx = self.direction * self.speed * gfw.frame_time
-        self.x += self.dx  # 실제 월드 좌표 기준으로 이동
+        self.x += self.dx
         
     def handle_idle(self):
         self.state = Enemy_01.IDLE
+        self.current_image = self.idle_image
         self.dx = 0
         
-    def get_player(self):  #플레이어를  찾아 공격 및 추적을 할 수 있는함수
+    def get_player(self): 
         world = gfw.top().world  
         for obj in world.objects[world.layer.player]:
             return obj
@@ -123,19 +132,19 @@ class Enemy_01:
         x_offset = -world.objects[world.layer.player][0].x
         y_offset = world.objects[world.layer.player][0].y - get_canvas_height() // 2
         
-        screen_x = self.x + x_offset  # x축은 오프셋 적용
-        screen_y = self.y - y_offset  # y축도 오프셋 적용하여 상대적 위치 계산
+        screen_x = self.x + x_offset
+        screen_y = self.y - y_offset
         
         if self.direction > 0:
             self.current_image.clip_composite_draw(
                 self.frame * frame_width, 0, frame_width, frame_height,
-                0, 'h', screen_x, screen_y,  # screen_y 사용
+                0, 'h', screen_x, screen_y,
                 frame_width, frame_height
             )
         else:
             self.current_image.clip_draw(
                 self.frame * frame_width, 0, frame_width, frame_height,
-                screen_x, screen_y  # screen_y 사용
+                screen_x, screen_y
             )
         
     def handle_collision(self, group, other):
