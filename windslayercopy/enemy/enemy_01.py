@@ -76,16 +76,19 @@ class Enemy_01:
         if player is None:
             return
             
-        distance = abs(self.x - player.x)
+        # 실제 월드 좌표 기준으로 거리 계산
+        world = gfw.top().world
+        x_offset = -world.objects[world.layer.player][0].x
+        player_world_x = player.x - x_offset  # 플레이어의 실제 월드 좌표
+        distance = abs(self.x - player_world_x)
         
         if self.state == Enemy_01.HIT:
-            # 맞았을때는 다른 행동을 하지 않음
             return
             
         if distance <= self.attack_range:
             self.handle_attack(player)
         elif distance <= self.detect_range:
-            self.handle_chase(player)
+            self.handle_chase(player_world_x)  # 실제 월드 좌표 전달
         else:
             self.handle_idle()
             
@@ -95,11 +98,11 @@ class Enemy_01:
             self.state = Enemy_01.ATTACK
             self.last_attack_time = current_time
             
-    def handle_chase(self, player):
+    def handle_chase(self, player_world_x):
         self.state = Enemy_01.WALK
-        self.direction = 1 if player.x > self.x else -1
+        self.direction = 1 if player_world_x > self.x else -1
         self.dx = self.direction * self.speed * gfw.frame_time
-        self.x += self.dx
+        self.x += self.dx  # 실제 월드 좌표 기준으로 이동
         
     def handle_idle(self):
         self.state = Enemy_01.IDLE
@@ -112,38 +115,28 @@ class Enemy_01:
         return None
         
     def draw(self):
-        world = gfw.top().world
-        for obj in world.objects[world.layer.player]:
-            player = obj
-            break
-        
-        x_offset = -player.x + 600  
-        y_offset = -(player.y - 400)  
-        
-        if self.state == Enemy_01.IDLE:
-            image = self.idle_image
-        elif self.state == Enemy_01.WALK:
-            image = self.walk_image
-        elif self.state == Enemy_01.ATTACK:
-            image = self.attack_image
-        elif self.state == Enemy_01.HIT:
-            image = self.hit_image
-        elif self.state == Enemy_01.DEAD:
-            image = self.dead_image
-            
         anim = self.animations[self.state]
-        flip = 'h' if self.direction < 0 else ''
+        frame_width = anim['width']
+        frame_height = anim['height']
         
-        screen_x = self.x + x_offset
-        screen_y = self.y + y_offset
+        world = gfw.top().world
+        x_offset = -world.objects[world.layer.player][0].x
+        y_offset = world.objects[world.layer.player][0].y - get_canvas_height() // 2
         
-        image.clip_composite_draw(
-            self.frame * anim['width'], 0,
-            anim['width'], anim['height'],
-            0, flip,
-            screen_x, screen_y,
-            anim['width'], anim['height']
-        )
+        screen_x = self.x + x_offset  # x축은 오프셋 적용
+        screen_y = self.y - y_offset  # y축도 오프셋 적용하여 상대적 위치 계산
+        
+        if self.direction > 0:
+            self.current_image.clip_composite_draw(
+                self.frame * frame_width, 0, frame_width, frame_height,
+                0, 'h', screen_x, screen_y,  # screen_y 사용
+                frame_width, frame_height
+            )
+        else:
+            self.current_image.clip_draw(
+                self.frame * frame_width, 0, frame_width, frame_height,
+                screen_x, screen_y  # screen_y 사용
+            )
         
     def handle_collision(self, group, other):
         if group == 'player:enemy':
