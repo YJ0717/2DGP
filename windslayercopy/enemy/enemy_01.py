@@ -147,6 +147,12 @@ class Enemy_01:
                 screen_x, screen_y
             )
         
+        # 몬스터 바운딩 박스 그리기
+        draw_rectangle(
+            screen_x - frame_width // 2, screen_y - frame_height // 2,
+            screen_x + frame_width // 2, screen_y + frame_height // 2
+        )
+        
     def handle_collision(self, group, other):
         if group == 'player:enemy':
             # 추후 추가 코드
