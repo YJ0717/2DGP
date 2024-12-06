@@ -34,6 +34,21 @@ class Player:
         self.stone_skill = StoneSkill()
         self.blizzard_skill = BlizzardSkill()
 
+        #========================== 몬스터한테 맞았을 때 ========================
+        self.is_hit = False  
+        self.invincible = False  
+        self.invincible_duration = 1.5  
+        self.invincible_time = 0  
+        self.hit_image = gfw.image.load('player_hit.png')  
+        self.hit_duration = 0.2  
+        self.hit_time = 0  
+        self.hit_frame_count = 1  
+        self.hit_frame_width = 100  
+        self.hit_frame_height = 130 
+        self.hit_fps = 3
+        self.hit_frame = 0 
+        self.prev_hp = self.hp  
+
     #==========================================행동이미지 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
@@ -99,31 +114,46 @@ class Player:
     #==========================================행동 업데이트==========================================
     def update(self):
         self.time += gfw.frame_time
+
+        if self.is_hit:
+            self.hit_time += gfw.frame_time
+            self.hit_frame = int(self.hit_time * self.hit_fps) % self.hit_frame_count
+            if self.hit_time >= self.hit_duration:
+                self.is_hit = False
+                self.invincible = True  
+                self.invincible_time = 0
+            return  
+
+        if self.invincible:
+            self.invincible_time += gfw.frame_time
+            if self.invincible_time >= self.invincible_duration:
+                self.invincible = False
+
         if self.is_dashing:
             self.update_dash()
         elif self.is_attacking:
-            self.update_attack()  
+            self.update_attack()
         else:
             self.update_movement()
             self.update_jump()
-        
-        if self.weapon_equipped and self.weapon: 
+
+        if self.weapon_equipped and self.weapon:
             self.weapon.update(self)
         else:
-            self.magic_attack.update()  # 무기가 없을 때 기본 공격 업데이트
+            self.magic_attack.update()
         self.ui.update()
 
-        # ========================================플레이어가 타일에 따라 움직이기 위해  y축 위치를 계속 떨어지게 함==============================
-        if not self.is_jumping:  # 점프 중이 아닐 때만 중력 적용
-            self.velocity_y += self.gravity  # 중력 적용
-            self.y += self.velocity_y  # y 위치 업데이트
+        if not self.is_jumping:
+            self.velocity_y += self.gravity
+            self.y += self.velocity_y
 
-            # 바닥에 닿았는지 확인
-            if self.y < 0:  
-                self.y = 0  
-                self.velocity_y = 0  
-                self.is_jumping = False  
-                self.can_double_jump = True  
+            if self.y < 0:
+                self.y = 0
+                self.velocity_y = 0
+                self.is_jumping = False
+                self.can_double_jump = True
+
+        self.ui.update()
 
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
@@ -185,7 +215,7 @@ class Player:
             self.y += self.velocity_y
             self.velocity_y += self.gravity
             
-            # 바닥에 닿았는지 확인
+            # 닥에 닿았는지 확인
             if self.y <= 0:  # 바닥에 닿았을 때
                 self.y = 0  # y 위치를 0으로 설정
                 self.is_jumping = False  # 점프 상태 초기화
@@ -197,34 +227,42 @@ class Player:
 
     #==========================================그리기========================================== 
     def draw(self):
-        if self.weapon_equipped and self.weapon:
-            # 무기가 장착된 경우 캐릭터 이미지를 그리지 않고 무기만 그리기
-            self.weapon.draw(self.x, self.y, 'h' if self.dx > 0 else '')
-            # 바운딩 박스 그리기 (무기를 든 경우, 기본 캐릭터 크기 사용)
-            half_width = config.IDLE_FRAME_WIDTH // 2  # 기본 캐릭터 크기
-            half_height = config.IDLE_FRAME_HEIGHT // 2  # 기본 캐릭터 크기
-            draw_rectangle(self.x - half_width, self.y - half_height,
-                           self.x + half_width, self.y + half_height)
-        else:
-            if self.is_dashing:
-                self.draw_dash()
-            elif self.is_attacking:
-                self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')
-            elif self.is_jumping:
-                self.draw_jump()
-            else:
-                x = self.frame * self.frame_width
-                y = self.action * self.frame_height
-                self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
-                
-            # 바운딩 박스 그리기 (무기를 들지 않은 경우)
-            half_width = self.frame_width // 2
-            half_height = self.frame_height // 2
-            draw_rectangle(self.x - half_width, self.y - half_height,
-                           self.x + half_width, self.y + half_height)
-
-        self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')  # 마법 공격 그리기
+        # UI는 항상 그리기 (무적 상태와 관계없이)
         self.ui.draw()
+
+        if self.is_hit:
+            x_offset = self.hit_frame * self.hit_frame_width
+            self.hit_image.clip_draw(x_offset, 0, self.hit_frame_width, self.hit_frame_height, self.x, self.y)
+        else:
+            if self.invincible:
+                # 무적 상태일 때 깜빡거림 효과 (UI 제외)
+                if int(self.invincible_time * 10) % 2 == 0:
+                    return  # 짝수일 때는 플레이어만 그리지 않음 (UI는 이미 그려짐)
+
+            if self.weapon_equipped and self.weapon:
+                self.weapon.draw(self.x, self.y, 'h' if self.dx > 0 else '')
+                half_width = config.IDLE_FRAME_WIDTH // 2
+                half_height = config.IDLE_FRAME_HEIGHT // 2
+                draw_rectangle(self.x - half_width, self.y - half_height,
+                               self.x + half_width, self.y + half_height)
+            else:
+                if self.is_dashing:
+                    self.draw_dash()
+                elif self.is_attacking:
+                    self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')
+                elif self.is_jumping:
+                    self.draw_jump()
+                else:
+                    x = self.frame * self.frame_width
+                    y = self.action * self.frame_height
+                    self.current_image.clip_draw(x, y, self.frame_width, self.frame_height, self.x, self.y)
+
+                half_width = self.frame_width // 2
+                half_height = self.frame_height // 2
+                draw_rectangle(self.x - half_width, self.y - half_height,
+                               self.x + half_width, self.y + half_height)
+
+            self.magic_attack.draw(self.x, self.y, 'h' if self.dx > 0 else '')
 
     #==========================================대쉬 그리기==========================================
     def draw_dash(self):
@@ -306,8 +344,8 @@ class Player:
             if self.near_portal:
                 import Map.stage_2 as stage_2
                 gfw.change(stage_2)
-            elif self.near_npc2:  # NPC2와의 충돌 범위 내에 있을 때
-                self.talk_to_npc2 = True  # NPC2와 대화 시작
+            elif self.near_npc2:  # NPC2와의 충돌 범위 내에 있 때
+                self.talk_to_npc2 = True  # NPC2와 대화 시
             elif not self.is_jumping:
                 self.is_jumping = True
                 self.velocity_y = self.jump_speed
@@ -380,13 +418,18 @@ class Player:
 
     #==========================================플레이어와 적의 충돌 처리==========================================  
     def handle_collision(self, group, other):
+        # 피격 상태일 때는 충돌 처리를 하지 않음
+        if self.is_hit or self.invincible:
+            return
+
         if group == 'player:enemy':
             if isinstance(other, Enemy_01):
-                if other.state == Enemy_01.ATTACK:
-                    # 적의 공격에 맞았을 때
-                    self.hp -= max(0, other.attack_power - self.defense)
+                self.is_hit = True
+                self.hp -= other.attack_power
+                self.invincible = True
+                self.invincible_time = 0
 
-#==========================================무기 장착/해제 처리==========================================
+#==========================================무기 착/해제 처리==========================================
     def toggle_weapon(self):
         if not self.talk_to_npc2:  # NPC2와 대화하기 전에는 무기 장착 불가
             return
@@ -409,7 +452,7 @@ class CustomPlayer(Player):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
         self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
         self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
-        self.talk_to_npc2 = False  # 두 번째 NPC와의 대화 상태 초기화
+        self.talk_to_npc2 = False  #  번째 NPC와의 대화 상태 초기화
         self.near_npc2 = False  # 두 번째 NPC와의 충돌 상태 초기화
         if equip_weapon:
             self.weapon = Weapon()  
