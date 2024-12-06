@@ -21,11 +21,17 @@ class PlayerUI:
         # =============================== 퀵슬롯 위치 설정 ===============================
         self.quick_slot_x, self.quick_slot_y = 160, 655
 
+#========================최대 hp에서 현재 hp 비율에 따라 줄어드는 위치 계산 ========================
     def draw(self):
         self.ui_background.draw(self.ui_x, self.ui_y)
 
         hp_ratio = self.player.hp / self.player.max_hp
-        self.hp_image.clip_draw(0, 0, int(self.bar_width * hp_ratio), self.bar_height, self.hp_x, self.hp_y)
+        hp_x_offset = int(self.bar_width * (1 - hp_ratio))
+        self.hp_image.clip_draw(
+            hp_x_offset, 0,
+            int(self.bar_width * hp_ratio), self.bar_height,
+            self.hp_x - hp_x_offset//2, self.hp_y
+        )
 
         mp_ratio = self.player.mp / self.player.max_mp
         self.mp_image.clip_draw(0, 0, int(self.bar_width * mp_ratio), self.bar_height, self.mp_x, self.mp_y)
