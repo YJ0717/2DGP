@@ -58,7 +58,12 @@ class Enemy_01:
         self.time += gfw.frame_time
         self.update_animation()
         self.update_ai()
-        self.apply_gravity()  
+        self.apply_gravity()
+
+        # 플레이어와의 충돌 체크
+        player = self.get_player()
+        if player:
+            self.check_collision_with_player(player)
         
     def update_animation(self):
         anim = self.animations[self.state]
@@ -180,3 +185,49 @@ class Enemy_01:
         self.velocity_y = getattr(self, 'velocity_y', 0)
         self.velocity_y += enemy_config.ENEMY_01_GRAVITY
         self.y += self.velocity_y
+# ====================================== 적 캐릭터의 bb를 계산하는 함수 ===============  
+    def get_bounding_box(self):
+        screen_x, screen_y = self.get_screen_position()
+        anim = self.animations[self.state]
+        half_width = anim['width'] // 2
+        half_height = anim['height'] // 2
+        return (screen_x - half_width, screen_y - half_height, screen_x + half_width, screen_y + half_height)
+#========================== 적 캐릭터의 화면 좌표 계산 ========================
+    def get_screen_position(self):
+        world = gfw.top().world
+        x_offset = -world.objects[world.layer.player][0].x
+        y_offset = world.objects[world.layer.player][0].y - get_canvas_height() // 2
+        
+        screen_x = self.x + x_offset
+        screen_y = self.y - y_offset
+        return screen_x, screen_y
+#========================== 적 캐릭터와 플레이어 충돌 체크 ========================
+    def check_collision_with_player(self, player):
+        if player.is_hit or player.invincible:
+            return False
+            
+        if self.collide(player):
+            self.handle_player_collision(player)
+            return True
+        return False
+#========================== 두 객체간의 충돌처리 검사 aabb  ========================
+    def collide(self, other):
+        left_a, bottom_a, right_a, top_a = self.get_bounding_box()
+        
+        left_b, bottom_b, right_b, top_b = other.get_bounding_box()
+
+        if left_a > right_b: return False
+        if right_a < left_b: return False
+        if top_a < bottom_b: return False
+        if bottom_a > top_b: return False
+
+        return True
+#========================== 플레이어와 몬스터가  충돌 했을때의 처리 담당 ========================
+    def handle_player_collision(self, player):
+        if not player.is_hit and not player.invincible:
+            player.is_hit = True
+            player.hit_time = 0
+            if self.state == Enemy_01.ATTACK:
+                player.hp -= self.attack_power
+            else:
+                player.hp -= self.attack_power // 2  
