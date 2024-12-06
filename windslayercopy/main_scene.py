@@ -37,6 +37,9 @@ def handle_event(e):
 
 def update():
     world.update()
+    player.update()  
+    player.prev_hp = player.hp  
+    player.ui.update()  
 
 def draw():
     world.draw()
