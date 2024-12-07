@@ -139,3 +139,11 @@ class MagicAttack:
                 0, flip_direction, draw_x, b_attack['y'],
                 b_attack['frame_width'], b_attack['frame_height']
             )
+            # 바운딩 박스 그리기
+            left, bottom, right, top = self.get_bounding_box(b_attack)
+            draw_rectangle(left, bottom, right, top)
+
+    def get_bounding_box(self, b_attack):
+        x, y = b_attack['x'], b_attack['y']
+        width, height = b_attack['frame_width'], b_attack['frame_height']
+        return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)

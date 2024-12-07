@@ -98,3 +98,10 @@ class Projectile:
             0, flip, self.x, self.y,
             self.frame_width, self.frame_height
         )
+        # 바운딩 박스 그리기
+        left, bottom, right, top = self.get_bounding_box()
+        draw_rectangle(left, bottom, right, top)
+    def get_bounding_box(self):
+        x, y = self.x, self.y
+        width, height = self.frame_width, self.frame_height
+        return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)
