@@ -86,6 +86,7 @@ class MagicAttack:
             self.attack_time += gfw.frame_time
             if self.attack_time >= self.attack_duration:
                 self.is_attacking = False
+                self.b_attacks = [b for b in self.b_attacks if b['image'] != self.b_attack_image1]
             else:
                 self.frame = int(self.attack_time * self.fps) % self.frame_count
 
@@ -93,19 +94,18 @@ class MagicAttack:
             self.attack_time += gfw.frame_time
             if self.attack_time >= self.attack_duration2:
                 self.is_attacking2 = False
+                # 강한 공격 애니메이션이 끝나면 관련 투사체 제거
+                self.b_attacks = [b for b in self.b_attacks if b['image'] != self.b_attack_image2]
             else:
                 self.frame = int(self.attack_time * self.fps2) % self.frame_count2
 
-    # ==================== 발사체 사거리 체크 ====================
-        for b_attack in self.b_attacks[:]: #발사체 리스트 복사
-            b_attack['x'] += b_attack['direction'] * b_attack['speed'] * gfw.frame_time #발사체 x좌표 업데이트
-            b_attack['elapsed_time'] += gfw.frame_time #발사채 경과시간
-            b_attack['current_frame'] = int(b_attack['elapsed_time'] * b_attack['fps']) % b_attack['frame_count'] #프레임 계산
+        for b_attack in self.b_attacks[:]:
+            b_attack['x'] += b_attack['direction'] * b_attack['speed'] * gfw.frame_time
+            b_attack['elapsed_time'] += gfw.frame_time
+            b_attack['current_frame'] = int(b_attack['elapsed_time'] * b_attack['fps']) % b_attack['frame_count']
             
-            # 사거리 체크
             if abs(b_attack['x'] - b_attack['start_x']) > b_attack['max_range']:
                 self.b_attacks.remove(b_attack)
-
 
     # ========================= 약공 강공 투사체 이미지 그리기 =========================
     def draw(self, x, y, flip='h'):
@@ -116,6 +116,8 @@ class MagicAttack:
                 0, flip, x, y,
                 self.frame_width, self.frame_height
             )
+        
+        # 강한 공격 그기
         elif self.is_attacking2:
             x_offset = self.frame * self.frame_width2
             self.attack_image2.clip_composite_draw(
@@ -126,24 +128,29 @@ class MagicAttack:
 
         for b_attack in self.b_attacks:
             frame_x = b_attack['current_frame'] * b_attack['frame_width']
-            # 방향에 따라 x 좌표 조정 및 이미지 반전  ->오른쪽 방향에 공격사거리 짧아지는 버그 수정
             if b_attack['direction'] > 0:
                 draw_x = b_attack['x']
-                flip_direction = 'h'  # 수평 반전
+                flip_direction = 'h'
             else:
                 draw_x = b_attack['x'] - b_attack['frame_width']
-                flip_direction = ''  # 반전 없음
+                flip_direction = ''
 
             b_attack['image'].clip_composite_draw(
                 frame_x, 0, b_attack['frame_width'], b_attack['frame_height'],
                 0, flip_direction, draw_x, b_attack['y'],
                 b_attack['frame_width'], b_attack['frame_height']
             )
-            # 바운딩 박스 그리기
             left, bottom, right, top = self.get_bounding_box(b_attack)
             draw_rectangle(left, bottom, right, top)
 
     def get_bounding_box(self, b_attack):
-        x, y = b_attack['x'], b_attack['y']
-        width, height = b_attack['frame_width'], b_attack['frame_height']
-        return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)
+        if b_attack['direction'] > 0:
+            x = b_attack['x']
+        else:
+            x = b_attack['x'] - b_attack['frame_width']
+        
+        y = b_attack['y']
+        width = b_attack['frame_width']
+        height = b_attack['frame_height']
+        
+        return (x, y - height//2, x + width, y + height//2)
