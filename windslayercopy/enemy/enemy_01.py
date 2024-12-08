@@ -12,6 +12,12 @@ class Enemy_01:
     def __init__(self, x, y):
         self.load_images()
         self.init_attributes(x, y)
+        #========================================== 깜빡거림 관련 속성 추가 ==========================================
+        self.invincible = False
+        self.invincible_time = 0
+        self.invincible_duration = 0.5  
+        self.blink_interval = 0.1  
+        self.visible = True  
         
     def load_images(self):
         self.idle_image = image.load('enemy01_idle.png')
@@ -51,16 +57,48 @@ class Enemy_01:
         self.last_attack_time = 0
         self.attack_cooldown = enemy_config.ENEMY_01_ATTACK_COOLDOWN
         
+        self.last_damage = 0  # 마지막으로 받은 데미지
+        self.damage_display_time = 0  # 데미지 표시 시간
+        
+        #========================================== 죽었을 때 or 맞았을 때 객체 처리 ==========================================
     def update(self):
-        if self.is_dead:
+        self.time += gfw.frame_time
+        
+        # 무미지 표시 시간 업데이트
+        if self.damage_display_time > 0:
+            self.damage_display_time -= gfw.frame_time
+        
+        # 죽은 상태일 때 처리
+        if self.state == Enemy_01.DEAD:
+            anim = self.animations[Enemy_01.DEAD]
+            self.frame = int(self.time * anim['fps']) % anim['frame_count']
+            if self.time >= (anim['frame_count'] / anim['fps']):
+                self.is_dead = True
+                world = gfw.top().world
+                world.remove(self, world.layer.enemy)
             return
         
-        self.time += gfw.frame_time
+        # 무적 시간 처리
+        if self.invincible:
+            self.invincible_time += gfw.frame_time
+            if self.invincible_time % self.blink_interval < self.blink_interval / 2:
+                self.visible = False
+            else:
+                self.visible = True
+            if self.invincible_time >= self.invincible_duration:
+                self.invincible = False
+                self.visible = True
+        
+        # 피격 상태일 때 처리
+        if self.state == Enemy_01.HIT:
+            if self.time >= 0.5:
+                self.state = Enemy_01.IDLE
+                self.time = 0
+        
         self.update_animation()
         self.update_ai()
         self.apply_gravity()
 
-        # 플레이어와의 충돌 체크
         player = self.get_player()
         if player:
             self.check_collision_with_player(player)
@@ -129,6 +167,12 @@ class Enemy_01:
         return None
         
     def draw(self):
+        if self.is_dead:
+            return
+        
+        if not self.visible and self.state != Enemy_01.DEAD:
+            return
+        
         anim = self.animations[self.state]
         frame_width = anim['width']
         frame_height = anim['height']
@@ -152,11 +196,52 @@ class Enemy_01:
                 screen_x, screen_y
             )
         
-        # 몬스터 바운딩 박스 그리기
-        draw_rectangle(
-            screen_x - frame_width // 2, screen_y - frame_height // 2,
-            screen_x + frame_width // 2, screen_y + frame_height // 2
-        )
+        if not self.state == Enemy_01.DEAD:
+            draw_rectangle(
+                screen_x - frame_width // 2, screen_y - frame_height // 2,
+                screen_x + frame_width // 2, screen_y + frame_height // 2
+            )
+            
+            # ============================= HP 바 그리기 =============================
+            hp_bar_width = 50
+            hp_bar_height = 5
+            hp_bar_y = screen_y + frame_height // 2 + 10
+            
+            draw_rectangle(
+                screen_x - hp_bar_width // 2, hp_bar_y - hp_bar_height // 2,
+                screen_x + hp_bar_width // 2, hp_bar_y + hp_bar_height // 2
+            )
+            
+            # 현재 HP 바 (빨간색)
+            current_hp_width = (hp_bar_width * self.hp) // self.max_hp
+            if current_hp_width > 0:
+                hp_bar = image.load('hp_bar.png')  
+                hp_bar.draw_to_origin(
+                    screen_x - hp_bar_width // 2, 
+                    hp_bar_y - hp_bar_height // 2,
+                    current_hp_width, 
+                    hp_bar_height
+                )
+            
+            # 데미지 숫자 표시
+            if self.damage_display_time > 0:
+                x = screen_x
+                y = screen_y + frame_height // 2 + 40
+                
+                numbers_image = image.load('number_red.png')
+                damage_str = str(self.last_damage)
+                number_width = 40
+                number_height = 59
+                text_width = len(damage_str) * number_width
+                
+                for i, num in enumerate(damage_str):
+                    numbers_image.clip_draw(
+                        int(num) * number_width, 0,
+                        number_width, number_height,
+                        x - text_width//2 + i*number_width,
+                        y,
+                        number_width, number_height//2
+                    )
         
     def handle_collision(self, group, other):
         if group == 'player:enemy':
@@ -169,17 +254,25 @@ class Enemy_01:
                     self.y = other.y + other.height // 2 + self.animations[self.state]['height'] // 2
         
     def get_hit(self, damage):
-        if self.is_dead:
+        if self.is_dead or self.invincible:
             return
             
-        self.hp -= max(0, damage - self.defense)
-        self.state = Enemy_01.HIT
-        self.time = 0  
+        actual_damage = max(0, damage - self.defense)
+        self.hp -= actual_damage
+        self.last_damage = actual_damage
+        self.damage_display_time = 1.0
+        self.invincible = True
+        self.invincible_time = 0
         
         if self.hp <= 0:
-            self.is_dead = True
+            self.hp = 0  
             self.state = Enemy_01.DEAD
-            self.time = 0  
+            self.time = 0
+            self.current_image = self.dead_image
+            self.frame = 0 
+        else:
+            self.state = Enemy_01.HIT
+            self.time = 0
 
     def apply_gravity(self):
         self.velocity_y = getattr(self, 'velocity_y', 0)
