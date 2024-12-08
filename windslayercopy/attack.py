@@ -3,6 +3,7 @@ import gfw
 import gfw.image as image
 import config  
 import time
+from enemy.enemy_01 import Enemy_01
 
 class MagicAttack:
     # ========================= 약한공격 강한공격 이미지 로드 =========================
@@ -34,6 +35,9 @@ class MagicAttack:
         self.b_attacks = []
         self.b_attack_image1 = image.load('b_attack1.png')
         self.b_attack_image2 = image.load('b_attack2.png')
+        # ========================= 데미지 설정 =========================
+        self.basic_attack_damage = 10  
+        self.strong_attack_damage = 20  
 
     # ========================= 약한공격 투사체 발사  =========================
     def start_attack(self, x, y, direction):
@@ -46,7 +50,9 @@ class MagicAttack:
             self.attack_time = 0
             self.frame = 0
             self.last_attack_time = current_time
-            self.fire_b_attack(x, y, direction, self.b_attack_image1, config.B_ATTACK1_FRAME_COUNT, config.B_ATTACK1_FRAME_WIDTH, config.B_ATTACK1_FRAME_HEIGHT, config.B_ATTACK1_FPS, config.B_ATTACK1_MAX_RANGE)
+            self.fire_b_attack(x, y, direction, self.b_attack_image1, config.B_ATTACK1_FRAME_COUNT, 
+                             config.B_ATTACK1_FRAME_WIDTH, config.B_ATTACK1_FRAME_HEIGHT, 
+                             config.B_ATTACK1_FPS, config.B_ATTACK1_MAX_RANGE)
 
     # ========================= 강한공격 투사체 발사  =========================
     def start_attack2(self, x, y, direction):
@@ -59,7 +65,9 @@ class MagicAttack:
             self.attack_time = 0
             self.frame = 0
             self.last_attack_time2 = current_time
-            self.fire_b_attack(x, y, direction, self.b_attack_image2, config.B_ATTACK2_FRAME_COUNT, config.B_ATTACK2_FRAME_WIDTH, config.B_ATTACK2_FRAME_HEIGHT, config.B_ATTACK2_FPS, config.B_ATTACK2_MAX_RANGE)
+            self.fire_b_attack(x, y, direction, self.b_attack_image2, config.B_ATTACK2_FRAME_COUNT, 
+                             config.B_ATTACK2_FRAME_WIDTH, config.B_ATTACK2_FRAME_HEIGHT, 
+                             config.B_ATTACK2_FPS, config.B_ATTACK2_MAX_RANGE)
 
     # ========================= 투사체 관련 구체적 설정 딕션어리로 데이터 관리  =========================
     def fire_b_attack(self, x, y, direction, image, frame_count, frame_width, frame_height, fps, max_range):
@@ -94,7 +102,6 @@ class MagicAttack:
             self.attack_time += gfw.frame_time
             if self.attack_time >= self.attack_duration2:
                 self.is_attacking2 = False
-                # 강한 공격 애니메이션이 끝나면 관련 투사체 제거
                 self.b_attacks = [b for b in self.b_attacks if b['image'] != self.b_attack_image2]
             else:
                 self.frame = int(self.attack_time * self.fps2) % self.frame_count2
@@ -104,8 +111,34 @@ class MagicAttack:
             b_attack['elapsed_time'] += gfw.frame_time
             b_attack['current_frame'] = int(b_attack['elapsed_time'] * b_attack['fps']) % b_attack['frame_count']
             
+            self.check_monster_collision(b_attack)
+            
             if abs(b_attack['x'] - b_attack['start_x']) > b_attack['max_range']:
                 self.b_attacks.remove(b_attack)
+
+    # ========================= 몬스터 충돌 체크 =========================
+    def check_monster_collision(self, b_attack):
+        world = gfw.top().world
+        for obj in world.objects_at(world.layer.enemy):
+            if isinstance(obj, Enemy_01):
+                if self.check_collision(b_attack, obj):
+                    damage = self.basic_attack_damage if b_attack['image'] == self.b_attack_image1 else self.strong_attack_damage
+                    obj.get_hit(damage)
+                    if b_attack in self.b_attacks:
+                        self.b_attacks.remove(b_attack)
+                    return
+
+    # ========================= 충돌 검사 =========================
+    def check_collision(self, b_attack, monster):
+        left_a, bottom_a, right_a, top_a = self.get_bounding_box(b_attack)
+        left_b, bottom_b, right_b, top_b = monster.get_bounding_box()
+
+        if left_a > right_b: return False
+        if right_a < left_b: return False
+        if top_a < bottom_b: return False
+        if bottom_a > top_b: return False
+
+        return True
 
     # ========================= 약공 강공 투사체 이미지 그리기 =========================
     def draw(self, x, y, flip='h'):
@@ -117,7 +150,6 @@ class MagicAttack:
                 self.frame_width, self.frame_height
             )
         
-        # 강한 공격 그기
         elif self.is_attacking2:
             x_offset = self.frame * self.frame_width2
             self.attack_image2.clip_composite_draw(
