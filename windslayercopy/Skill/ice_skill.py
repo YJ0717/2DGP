@@ -3,6 +3,7 @@ import gfw
 import gfw.image as image
 import config
 import time
+from enemy.enemy_01 import Enemy_01
 
 # ========================== wind_skill.py 와 동일한 클래스 구조 재활용  ======================================================
 
@@ -21,6 +22,7 @@ class IceSkill:
         self.projectiles = []
         self.skill_cooldown = config.ICE_SKILL_COOLDOWN
         self.last_skill_time = -self.skill_cooldown
+        self.ice_damage = 15  # 기본 데미지
 
     def start_cast(self, x, y, direction):
         current_time = time.time()
@@ -73,15 +75,30 @@ class IceProjectile:
         self.max_range = config.ICE_SKILL_MAX_RANGE
         self.start_x = x
         self.elapsed_time = 0
+        self.damage = 15  
 
     def update(self):
         self.elapsed_time += gfw.frame_time
         self.frame = int(self.elapsed_time * self.fps) % self.frame_count
         self.x += self.direction * config.ICE_SKILL_SPEED * gfw.frame_time
 
+        if self.check_monster_collision():
+            return False
+            
         if abs(self.x - self.start_x) > self.max_range:
             return False
         return True
+
+    def check_monster_collision(self):
+        world = gfw.top().world
+        for obj in world.objects_at(world.layer.enemy):
+            if isinstance(obj, Enemy_01):
+                if self.collide(obj):
+                    obj.get_hit(self.damage)
+                    obj.is_frozen = True  
+                    obj.frozen_time = 0
+                    return True
+        return False
 
     def draw(self):
         x_offset = self.frame * self.frame_width
@@ -91,7 +108,7 @@ class IceProjectile:
             0, flip, self.x, self.y,
             self.frame_width, self.frame_height
         )
-        # 바운딩 박스 그리기
+# ================ 바운딩 박스 그리기 ==========================================
         left, bottom, right, top = self.get_bounding_box()
         draw_rectangle(left, bottom, right, top)
 
@@ -99,3 +116,14 @@ class IceProjectile:
         x, y = self.x, self.y
         width, height = self.frame_width, self.frame_height
         return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)
+
+    def collide(self, other):
+        left_a, bottom_a, right_a, top_a = self.get_bounding_box()
+        left_b, bottom_b, right_b, top_b = other.get_bounding_box()
+
+        if left_a > right_b: return False
+        if right_a < left_b: return False
+        if top_a < bottom_b: return False
+        if bottom_a > top_b: return False
+
+        return True

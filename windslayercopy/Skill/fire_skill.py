@@ -3,6 +3,7 @@ import gfw
 import gfw.image as image
 import config
 import time
+from enemy.enemy_01 import Enemy_01
 
 class FireSkill:
     def __init__(self, cast_image_file='fire_attack.png', skill_image_file='fire_skill.png'):
@@ -19,6 +20,7 @@ class FireSkill:
         self.projectiles = []
         self.skill_cooldown = config.FIRE_SKILL_COOLDOWN
         self.last_skill_time = -self.skill_cooldown
+        self.fire_damage = 25  
 
     def start_cast(self, x, y, direction):
         current_time = time.time()
@@ -73,6 +75,7 @@ class Projectile:
         self.max_range = config.FIRE_SKILL_MAX_RANGE
         self.start_x = x
         self.elapsed_time = 0
+        self.damage = 20  
 
     def update(self):
         self.elapsed_time += gfw.frame_time
@@ -81,6 +84,7 @@ class Projectile:
 
         if abs(self.x - self.start_x) > self.max_range:
             return False
+        self.check_monster_collision()
         return True
 
     def draw(self):
@@ -99,3 +103,25 @@ class Projectile:
         x, y = self.x, self.y
         width, height = self.frame_width, self.frame_height
         return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)
+
+    def check_monster_collision(self):
+        world = gfw.top().world
+        for obj in world.objects_at(world.layer.enemy):
+            if isinstance(obj, Enemy_01):
+                if self.collide(obj):
+                    obj.get_hit(self.damage)
+                    obj.is_burning = True  
+                    obj.burning_time = 0
+                    return True
+        return False
+
+    def collide(self, other):
+        left_a, bottom_a, right_a, top_a = self.get_bounding_box()
+        left_b, bottom_b, right_b, top_b = other.get_bounding_box()
+
+        if left_a > right_b: return False
+        if right_a < left_b: return False
+        if top_a < bottom_b: return False
+        if bottom_a > top_b: return False
+
+        return True

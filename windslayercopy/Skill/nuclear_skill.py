@@ -3,6 +3,7 @@ import gfw
 import gfw.image as image
 import config
 import time
+from enemy.enemy_01 import Enemy_01
 
 class NuclearSkill:
     def __init__(self, cast_image_file='nuclear_attack.png', skill_image_file='nuclear_skill.png'):
@@ -71,14 +72,26 @@ class Projectile:
         self.fps = config.NUCLEAR_SKILL_FPS
         self.elapsed_time = 0
         self.duration = config.NUCLEAR_SKILL_DURATION
+        self.damage = 50
+        self.has_damaged = False
 
     def update(self):
         self.elapsed_time += gfw.frame_time
         self.frame = int(self.elapsed_time * self.fps) % self.frame_count
 
+        if not self.has_damaged:
+            self.damage_all_monsters()
+            self.has_damaged = True
+
         if self.elapsed_time > self.duration:
             return False
         return True
+
+    def damage_all_monsters(self):
+        world = gfw.top().world
+        for obj in world.objects_at(world.layer.enemy):
+            if isinstance(obj, Enemy_01):
+                obj.get_hit(self.damage, 'nuclear')
 
     def draw(self):
         x_offset = self.frame * self.frame_width
@@ -88,11 +101,3 @@ class Projectile:
             0, flip, self.x, self.y,
             self.frame_width, self.frame_height
         )
-        # 바운딩 박스 그리기
-        left, bottom, right, top = self.get_bounding_box()
-        draw_rectangle(left, bottom, right, top)
-
-    def get_bounding_box(self):
-        x, y = self.x, self.y
-        width, height = self.frame_width, self.frame_height
-        return (x - width // 2, y - height // 2, x + width // 2, y + height // 2)

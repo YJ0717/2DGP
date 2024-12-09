@@ -3,6 +3,7 @@ import gfw
 import gfw.image as image
 import config
 import time
+from enemy.enemy_01 import Enemy_01
 
 class BlizzardSkill:
     def __init__(self, cast_image_file='blizzard_attack.png', skill_image_file='blizzard_skill.png'):
@@ -71,13 +72,39 @@ class Projectile:
         self.fps = config.BLIZZARD_SKILL_FPS
         self.elapsed_time = 0
         self.duration = config.BLIZZARD_SKILL_DURATION
+        self.damage = 25
+        self.damage_cooldown = 0.5
+        self.last_damage_time = -self.damage_cooldown
 
     def update(self):
         self.elapsed_time += gfw.frame_time
         self.frame = int(self.elapsed_time * self.fps) % self.frame_count
+        
+        # ================ 설치기 스킬이기 때문에 매 프레임마다 충돌 체크 ==========================================
+        self.check_monster_collision()
 
         if self.elapsed_time > self.duration:
             return False
+        return True
+
+    def check_monster_collision(self):
+        world = gfw.top().world
+        for obj in world.objects_at(world.layer.enemy):
+            if isinstance(obj, Enemy_01):
+                if self.collide(obj):
+                    obj.get_hit(self.damage, 'blizzard')
+                    obj.is_frozen = True
+                    obj.frozen_time = 0
+
+    def collide(self, other):
+        left_a, bottom_a, right_a, top_a = self.get_bounding_box()
+        left_b, bottom_b, right_b, top_b = other.get_bounding_box()
+
+        if left_a > right_b: return False
+        if right_a < left_b: return False
+        if top_a < bottom_b: return False
+        if bottom_a > top_b: return False
+
         return True
 
     def draw(self):
@@ -88,7 +115,7 @@ class Projectile:
             0, flip, self.x, self.y,
             self.frame_width, self.frame_height
         )
-        # 바운딩 박스 그리기
+# ================ 발사체 바운딩박스  ==========================================
         left, bottom, right, top = self.get_bounding_box()
         draw_rectangle(left, bottom, right, top)
 
