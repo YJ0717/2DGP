@@ -19,6 +19,19 @@ class Enemy_01:
         self.blink_interval = 0.1  
         self.visible = True  
         
+        #==================================  불,얼음,블리자드 상태이상 효과 설정 ==========================================
+        self.is_frozen = False
+        self.frozen_time = 0
+        self.frozen_duration = 2.0 
+        
+        self.is_burning = False
+        self.burning_time = 0
+        self.burning_duration = 3.0  
+        self.burn_tick = 0
+        self.burn_count = 0  
+        
+        self.damage_immune_time = {}  
+        
     def load_images(self):
         self.idle_image = image.load('enemy01_idle.png')
         self.walk_image = image.load('enemy01_walk.png')
@@ -57,8 +70,8 @@ class Enemy_01:
         self.last_attack_time = 0
         self.attack_cooldown = enemy_config.ENEMY_01_ATTACK_COOLDOWN
         
-        self.last_damage = 0  # 마지막으로 받은 데미지
-        self.damage_display_time = 0  # 데미지 표시 시간
+        self.last_damage = 0  
+        self.damage_display_time = 0 
         
         #========================================== 죽었을 때 or 맞았을 때 객체 처리 ==========================================
     def update(self):
@@ -68,7 +81,36 @@ class Enemy_01:
         if self.damage_display_time > 0:
             self.damage_display_time -= gfw.frame_time
         
-        # 죽은 상태일 때 처리
+        # =================== 불 얼음 상태이상 효과 업데이트 ===================
+        if self.is_frozen:
+            self.frozen_time += gfw.frame_time
+            if self.frozen_time >= self.frozen_duration:
+                self.is_frozen = False
+                self.frozen_time = 0
+                
+        if self.is_burning:
+            self.burning_time += gfw.frame_time
+            self.burn_tick += gfw.frame_time
+            if self.burn_tick >= 1.0:  # 1초마다 데미지
+                # 단계별 데미지 적용
+                if self.burn_count == 0:
+                    damage = 5
+                elif self.burn_count == 1:
+                    damage = 6
+                else:
+                    damage = 7
+                    
+                self.hp -= damage
+                self.last_damage = damage
+                self.damage_display_time = 1.0
+                self.burn_tick = 0
+                self.burn_count += 1
+                
+            if self.burning_time >= self.burning_duration:
+                self.is_burning = False
+                self.burning_time = 0
+                self.burn_count = 0  
+        
         if self.state == Enemy_01.DEAD:
             anim = self.animations[Enemy_01.DEAD]
             self.frame = int(self.time * anim['fps']) % anim['frame_count']
@@ -78,7 +120,6 @@ class Enemy_01:
                 world.remove(self, world.layer.enemy)
             return
         
-        # 무적 시간 처리
         if self.invincible:
             self.invincible_time += gfw.frame_time
             if self.invincible_time % self.blink_interval < self.blink_interval / 2:
@@ -89,7 +130,6 @@ class Enemy_01:
                 self.invincible = False
                 self.visible = True
         
-        # 피격 상태일 때 처리
         if self.state == Enemy_01.HIT:
             if self.time >= 0.5:
                 self.state = Enemy_01.IDLE
@@ -113,6 +153,9 @@ class Enemy_01:
         if self.is_dead:
             self.state = Enemy_01.DEAD
             self.current_image = self.dead_image
+            return
+            
+        if self.is_frozen:  #빙겨ㅑㄹ
             return
             
         player = self.get_player()
@@ -223,7 +266,7 @@ class Enemy_01:
                     hp_bar_height
                 )
             
-            # 데미지 숫자 표시
+            # ================ 데미지 숫자 표시 ==============================
             if self.damage_display_time > 0:
                 x = screen_x
                 y = screen_y + frame_height // 2 + 40
@@ -245,7 +288,6 @@ class Enemy_01:
         
     def handle_collision(self, group, other):
         if group == 'player:enemy':
-            # 추후 추가 코드
             pass
         elif group == 'tile:enemy':
             if self.velocity_y <= 0:  
@@ -253,9 +295,17 @@ class Enemy_01:
                 if hasattr(other, 'y'):
                     self.y = other.y + other.height // 2 + self.animations[self.state]['height'] // 2
         
-    def get_hit(self, damage):
+    def get_hit(self, damage, skill_type=None):
         if self.is_dead or self.invincible:
             return
+            
+        # ==================== 스킬 타입이 있고, 해당 스킬의 데미지 쿨타임이 지나지 않았다면 데미지를 주지 않음 ====================
+        current_time = time.time()
+        if skill_type:
+            last_hit_time = self.damage_immune_time.get(skill_type, 0)
+            if current_time - last_hit_time < 0.5:  # 0.5초 쿨타임
+                return
+            self.damage_immune_time[skill_type] = current_time
             
         actual_damage = max(0, damage - self.defense)
         self.hp -= actual_damage
@@ -265,11 +315,11 @@ class Enemy_01:
         self.invincible_time = 0
         
         if self.hp <= 0:
-            self.hp = 0  
+            self.hp = 0
             self.state = Enemy_01.DEAD
             self.time = 0
             self.current_image = self.dead_image
-            self.frame = 0 
+            self.frame = 0
         else:
             self.state = Enemy_01.HIT
             self.time = 0
