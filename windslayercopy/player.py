@@ -106,10 +106,10 @@ class Player:
         self.double_jump_frame_count = config.PLAYER_DOUBLE_JUMP_FRAME_COUNT
         self.double_jump_time = 0
         # =================================공격 추가==============================
-        self.is_attacking = False  # 공격 상태 설정
+        self.is_attacking = False  
         self.attack_time = 0
         self.attack_duration = config.ATTACK_DURATION  
-        self.near_portal = False  # 포탈 근처에 있는지 여부
+        self.near_portal = False  
 
     #==========================================행동 업데이트==========================================
     def update(self):
@@ -215,19 +215,16 @@ class Player:
             self.y += self.velocity_y
             self.velocity_y += self.gravity
             
-            # 닥에 닿았는지 확인
-            if self.y <= 0:  # 바닥에 닿았을 때
-                self.y = 0  # y 위치를 0으로 설정
-                self.is_jumping = False  # 점프 상태 초기화
-                self.can_double_jump = True  # 더블 점프 가능 상태로 설정
-                self.velocity_y = 0  # 속도 초기화
+            if self.y <= 0:  
+                self.y = 0  
+                self.is_jumping = False  
+                self.can_double_jump = True  
+                self.velocity_y = 0  
             else:
-                # 점프 중일 때는 y 위치를 계속 업데이트
-                self.start_y = self.y  # 현재 y 위치를 start_y로 설정
+                self.start_y = self.y  
 
     #==========================================그리기========================================== 
     def draw(self):
-        # UI는 항상 그리기 (무적 상태와 관계없이)
         self.ui.draw()
 
         if self.is_hit:
@@ -235,9 +232,8 @@ class Player:
             self.hit_image.clip_draw(x_offset, 0, self.hit_frame_width, self.hit_frame_height, self.x, self.y)
         else:
             if self.invincible:
-                # 무적 상태일 때 깜빡거림 효과 (UI 제외)
                 if int(self.invincible_time * 10) % 2 == 0:
-                    return  # 짝수일 때는 플레이어만 그리지 않음 (UI는 이미 그려짐)
+                    return  
 
             if self.weapon_equipped and self.weapon:
                 self.weapon.draw(self.x, self.y, 'h' if self.dx > 0 else '')
@@ -269,15 +265,14 @@ class Player:
         frame_width, frame_height = config.DASH_FRAME_SIZES[self.dash_frame]
         x = self.dash_frame * frame_width
         if self.dx > 0:
-            # 오른쪽 대: dash.png를 수평 반전하 사용
             self.dash_image_left.clip_composite_draw(
                 x, 0, frame_width, frame_height,
-                0, 'h',  # h는 수평 반전을 의미
+                0, 'h',  
                 self.x, self.y,
-                frame_width, frame_height  # 크기를 명시적으로 지정
+                frame_width, frame_height  
             )
         else:
-            # 왼쪽 대쉬: dash.png를 그대로 사용
+            # ====왼쪽 대쉬: dash.png를 그대로 사용 ====
             self.dash_image_left.clip_draw(x, 0, frame_width, frame_height, self.x, self.y)
 
     # =============================== 점프 그리기 ===============================
@@ -304,10 +299,10 @@ class Player:
         self.attack_time += gfw.frame_time
         if self.attack_time >= self.attack_duration:
             self.is_attacking = False
-            self.last_attack_end_time = time.time()  # 공격 종료 시간 기록
+            self.last_attack_end_time = time.time()  
         else:
-            fps = config.ATTACK_FPS  # 공격 애니메이션 FPS
-            frame_count = config.ATTACK_FRAME_COUNT  # 공격 애니메이션 프레임 수
+            fps = config.ATTACK_FPS  
+            frame_count = config.ATTACK_FRAME_COUNT  
             self.frame = int(self.attack_time * fps) % frame_count
 
     def draw_attack(self):
@@ -322,30 +317,30 @@ class Player:
             self.handle_keyup(e)
 
     def handle_keydown(self, e):
-        current_time = time.time()  # 대쉬를 위한 시간
-        if e.key in (SDLK_LEFT, SDLK_RIGHT): # 걷는 방향 
+        current_time = time.time()  
+        if e.key in (SDLK_LEFT, SDLK_RIGHT): 
             direction = -1 if e.key == SDLK_LEFT else 1
             
             # =================대쉬 조건 =================
             if self.last_direction == direction and current_time - self.last_key_time < self.key_press_interval:
-                # 점프 중이 아니고 대쉬 쿨타임이 지났다면 대쉬 시작
                 if not self.is_jumping and current_time - self.last_dash_time >= self.dash_cooldown:
                     self.is_dashing = True  
                     self.dash_time = 0  
-                    self.last_dash_time = current_time  # 마지막 대쉬 시간기록하기
+                    self.last_dash_time = current_time  
             
             # =================이동 방향 및 시간 업데이트=================
             self.dx = direction
-            self.last_key_time = current_time  # 마지막 키 입력 시간 기록
-            self.last_direction = direction  # 
+            self.last_key_time = current_time  
+            self.last_direction = direction  
 
         # =================점프 처리=================
         elif e.key == SDLK_UP:
             if self.near_portal:
                 import Map.stage_2 as stage_2
                 gfw.change(stage_2)
-            elif self.near_npc2:  # NPC2와의 충돌 범위 내에 있 때
-                self.talk_to_npc2 = True  # NPC2와 대화 시
+            # ============== npc 대화 키 입력 처리 ===============
+            elif self.near_npc2:  
+                self.talk_to_npc2 = True  
             elif not self.is_jumping:
                 self.is_jumping = True
                 self.velocity_y = self.jump_speed
@@ -358,7 +353,6 @@ class Player:
         elif e.key == SDLK_DOWN:
             self.dy = -1  # 추후 삭제 예정
 
-        # 대쉬 키 입력 처리
         elif e.key == SDLK_LSHIFT:
             if not self.is_jumping:
                 self.is_dashing = True  
@@ -418,7 +412,6 @@ class Player:
 
     #==========================================플레이어와 적의 충돌 처리==========================================  
     def handle_collision(self, group, other):
-        # 피격 상태일 때는 충돌 처리를 하지 않음
         if self.is_hit or self.invincible:
             return
 
@@ -446,16 +439,18 @@ class Player:
         half_height = self.frame_height // 2
         return (self.x - half_width, self.y - half_height, self.x + half_width, self.y + half_height)
 
-#============================================바운딩박스 매소드 추가 ========================================
+#============================================갹체를 생성 및  다른 코드와 상호작용역할  ========================================
 class CustomPlayer(Player):
     def __init__(self, walk_left_image_file='walk.png', walk_right_image_file='walk2.png', idle_image_file='idle.png', attack_image_file='basic_attack.png', equip_weapon=False):
         super().__init__(walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file)
-        self.width = config.IDLE_FRAME_WIDTH  # 플레이어의 너비 설정
-        self.height = config.IDLE_FRAME_HEIGHT  # 플레이어의 높이 설정
-        self.talk_to_npc2 = False  #  번째 NPC와의 대화 상태 초기화
-        self.near_npc2 = False  # 두 번째 NPC와의 충돌 상태 초기화
+        self.width = config.IDLE_FRAME_WIDTH
+        self.height = config.IDLE_FRAME_HEIGHT
+        self.talk_to_npc2 = False
+        self.near_npc2 = False
+        self.near_portal = False
+        
         if equip_weapon:
-            self.weapon = Weapon()  
+            self.weapon = Weapon()
             self.weapon_equipped = True
         else:
             self.weapon = None
