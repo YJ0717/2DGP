@@ -41,6 +41,7 @@ def start_main_module():
     start(scene)
 
 def change(scene):
+    global _stack
     if _stack:
         _stack.pop().exit()
     _stack.append(scene)
