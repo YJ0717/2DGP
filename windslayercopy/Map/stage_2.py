@@ -53,7 +53,13 @@ def exit():
     world.clear()
 
 def handle_event(e):
-    player.handle_event(e)
+    global tile_map, player
+    if e.type == SDL_KEYDOWN and e.key == SDLK_UP:
+        if tile_map.player.near_portal:
+            import Map.stage_3 as stage_3
+            gfw.change(stage_3)
+            return True
+    return player.handle_event(e)
 
 def update():
     world.update()
@@ -135,6 +141,7 @@ class TileMap:
         if self.portal_animation_frame >= 4:
             self.portal_animation_frame = 0
 
+#========================== 타일 충돌처리 ==========================================
     def check_collision(self):
         player_x = self.player.x
         player_y = self.player.y
@@ -163,7 +170,7 @@ class TileMap:
                             self.player.is_jumping = False
                             self.player.current_image = self.player.idle_image
 
-                elif tile_index == 2:  # 타일 2에 대한 충돌 처리
+                elif tile_index == 2:  
                     tile_x = x * self.tile_size + self.tile_size // 2 + self.x_offset
                     tile_y = int(y * self.tile_size + self.tile_size // 2) - self.y_offset
                     half_width = 240 // 2  
@@ -212,6 +219,7 @@ class TileMap:
         else:
             self.player.near_portal = False
 
+#========================== 타일 그리기 ==========================================
     def draw(self):
         for y in range(len(self.tile_map_data)):
             row = self.tile_map_data[y]
@@ -290,6 +298,27 @@ class TileMap:
                             enemy.velocity_y = 0
                             return True
         return False
+        
+#========================== 포탈 충돌처리 ==========================================
+    def check_portal_collision(self):
+        portal_screen_x = self.portal_x + self.x_offset
+        
+        player_box = self.player.get_bounding_box()
+        portal_box = (
+            portal_screen_x - 25,  #l
+            self.portal_y - 50,    #b
+            portal_screen_x + 25,  #r  
+            self.portal_y + 50     #t
+        )
+
+        # 충돌 검사
+        if (player_box[0] < portal_box[2] and
+            player_box[2] > portal_box[0] and
+            player_box[1] < portal_box[3] and
+            player_box[3] > portal_box[1]):
+            self.player.near_portal = True
+        else:
+            self.player.near_portal = False
 
 def check_collisions():
     for enemy in world.objects[world.layer.enemy]:
