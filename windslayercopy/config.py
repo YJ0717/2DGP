@@ -202,5 +202,10 @@ NUCLEAR_SKILL_DURATION = 1
 NUCLEAR_SKILL_COOLDOWN = 8.0
 NUCLEAR_SKILL_SPAWN_OFFSET_X = 200
 
+# 플레이어 hp 저장용 전역 
+# =================================
+PLAYER_CURRENT_HP = 100  
+PLAYER_CURRENT_MP = 100  
+
 
 
