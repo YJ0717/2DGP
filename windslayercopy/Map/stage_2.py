@@ -50,6 +50,9 @@ def enter():
     world.append(player, world.layer.player)
 
 def exit():
+    player = world.objects[world.layer.player][0]
+    config.PLAYER_CURRENT_HP = player.hp
+    config.PLAYER_CURRENT_MP = player.mp
     world.clear()
 
 def handle_event(e):
