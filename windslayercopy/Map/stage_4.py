@@ -255,8 +255,12 @@ def enter():
     
     # ===== 적들 위치 설정 =====
     enemies = [
-        Enemy_04(500, 500),
+        Enemy_04(500, 500, player=player),
     ]
+    
+    # 각 적에게 플레이어 참조 전달
+    for enemy in enemies:
+        enemy.player = player  # 여기서 플레이어 참조를 설정
     
     background = Background()
     tile_images, tile_map_data = get_tile_map()
@@ -289,9 +293,40 @@ def handle_event(e):
 def update():
     world.update()
     
-    # 적과 타일맵 충돌 체크 추가
+    # 플사체 충돌 체크 - 완전히 단순화
     for enemy in world.objects[world.layer.enemy]:
-        tile_map.check_enemy_collision(enemy)
+        if isinstance(enemy, Enemy_04):
+            for projectile in enemy.projectiles[:]:
+                # 플레이어와 투사체의 직접적인 거리 체크
+                dx = abs(projectile['x'] - player.x)
+                dy = abs(projectile['y'] - player.y)
+                
+                # 매우 단순한 거리 기반 충돌 체크
+                if dx < 50 and dy < 50:  # 충돌 거리 임계값
+                    print("PROJECTILE HIT! dx:", dx, "dy:", dy)  # 상세한 디버깅 정보
+                    player.get_hit(enemy.projectile_damage)
+                    enemy.projectiles.remove(projectile)
+    
+    player.update()
+    player.prev_hp = player.hp
+    player.ui.update()
+
+def collision(a, b):
+    # 간단한 AABB 충돌 체크
+    a_bb = a.get_bb()
+    b_bb = b.get_bounding_box()
+    
+    return not (a_bb[0] > b_bb[2] or
+                a_bb[2] < b_bb[0] or
+                a_bb[1] > b_bb[3] or
+                a_bb[3] < b_bb[1])
+
+def check_collisions():
+    for enemy in world.objects[world.layer.enemy]:
+        if isinstance(enemy, Enemy_04):
+            for projectile in enemy.projectiles[:]:
+                if enemy.check_projectile_collision(projectile, player):
+                    enemy.projectiles.remove(projectile)
 
 def draw():
     world.draw()
@@ -339,10 +374,6 @@ def get_tile_map():
     ]
 
     return tile_images, tile_map_data
-
-def check_collisions():
-    for enemy in world.objects[world.layer.enemy]:
-        tile_map.check_enemy_collision(enemy)
 
 if __name__ == '__main__':
     gfw.start_main_module() 
