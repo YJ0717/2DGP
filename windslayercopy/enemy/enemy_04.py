@@ -28,11 +28,11 @@ class Enemy_04(Enemy_01):
         self.speed = enemy_config.ENEMY_04_WALK_SPEED
         
         self.animations = {
-            Enemy_01.IDLE: {'frame_count': 2, 'fps': enemy_config.ENEMY_04_IDLE_FPS, 'width': 65, 'height': 67},
-            Enemy_01.WALK: {'frame_count': 4, 'fps': enemy_config.ENEMY_04_WALK_FPS, 'width': 80, 'height': 72},
-            Enemy_01.ATTACK: {'frame_count': 3, 'fps': enemy_config.ENEMY_04_ATTACK_FPS, 'width': 65, 'height': 61},
-            Enemy_01.HIT: {'frame_count': 2, 'fps': enemy_config.ENEMY_04_HIT_FPS, 'width': 74, 'height': 71},
-            Enemy_01.DEAD: {'frame_count': 3, 'fps': enemy_config.ENEMY_04_DEAD_FPS, 'width': 100, 'height': 100}
+            Enemy_01.IDLE: {'frame_count': 2, 'fps': enemy_config.ENEMY_04_IDLE_FPS, 'width': 60, 'height': 93},
+            Enemy_01.WALK: {'frame_count': 4, 'fps': enemy_config.ENEMY_04_WALK_FPS, 'width': 60, 'height': 93},
+            Enemy_01.ATTACK: {'frame_count': 3, 'fps': enemy_config.ENEMY_04_ATTACK_FPS, 'width': 82, 'height': 93},
+            Enemy_01.HIT: {'frame_count': 2, 'fps': enemy_config.ENEMY_04_HIT_FPS, 'width': 58, 'height': 96},
+            Enemy_01.DEAD: {'frame_count': 3, 'fps': enemy_config.ENEMY_04_DEAD_FPS, 'width': 80, 'height': 94}
         }
 
         self.detect_range = enemy_config.ENEMY_04_DETECT_RANGE

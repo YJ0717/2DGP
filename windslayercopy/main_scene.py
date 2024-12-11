@@ -13,8 +13,8 @@ class Background:
 
     def update(self):
         global player  
-        self.x = -player.x * 0.5  # 플레이어 움직임에 따라 x 이동
-        self.y = -player.y * 0.1  # 플레이어 점프에 따라 y 이동
+        self.x = -player.x * 0.5  
+        self.y = -player.y * 0.1  
 
     def draw(self):
         self.image.draw_to_origin(self.x, self.y, 3000, 1250)  
