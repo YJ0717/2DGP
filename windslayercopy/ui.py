@@ -16,7 +16,7 @@ class PlayerUI:
 
         # =============================== hp/mp 바 위치 설정 ===============================
         self.hp_x, self.hp_y = 87, 705
-        self.mp_x, self.mp_y = 87, 695
+        self.mp_x, self.mp_y = 58, 695
 
         # =============================== 퀵슬롯 위치 설정 ===============================
         self.quick_slot_x, self.quick_slot_y = 160, 655
@@ -34,7 +34,12 @@ class PlayerUI:
         )
 
         mp_ratio = self.player.mp / self.player.max_mp
-        self.mp_image.clip_draw(0, 0, int(self.bar_width * mp_ratio), self.bar_height, self.mp_x, self.mp_y)
+        mp_x_offset = int(self.bar_width * 0.5 * (1 - mp_ratio))
+        self.mp_image.clip_draw(
+            mp_x_offset, 0,
+            int(self.bar_width * 0.5 * mp_ratio), self.bar_height,
+            self.mp_x - mp_x_offset//2, self.mp_y
+        )
 
         self.quick_slot_image.draw(self.quick_slot_x, self.quick_slot_y)
 
