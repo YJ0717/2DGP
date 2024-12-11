@@ -119,10 +119,34 @@ class TileMap:
             row = self.tile_map_data[y]
             for x in range(len(row)):
                 tile_index = row[x]
-                if tile_index > 0:
-                    tile_x = x * self.tile_size + self.x_offset
-                    tile_y = y * self.tile_size - self.y_offset
-                    self.tile_images[tile_index].draw_to_origin(tile_x, tile_y)
+                if tile_index >= 0:
+                    tile_image = self.tile_images[tile_index]
+                    tile_x = x * self.tile_size + self.tile_size // 2 + self.x_offset
+                    tile_y = y * self.tile_size + self.tile_size // 2 - self.y_offset
+                    tile_image.draw(tile_x, tile_y)
+
+                    # 타일 인덱스에 따른 바운딩 박스 그리기
+                    if tile_index == 1:  # 일반 타일
+                        half_width = 762 // 2
+                        half_height = 281 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
+                    elif tile_index == 2:  # 작은 타일
+                        half_width = 240 // 2
+                        half_height = 26 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
+                    elif tile_index == 3:  # 중간 타일
+                        half_width = 400 // 2
+                        half_height = 32 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
 
         self.draw_portal()
 
