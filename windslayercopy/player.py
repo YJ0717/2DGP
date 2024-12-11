@@ -49,7 +49,7 @@ class Player:
         self.hit_frame = 0 
         self.prev_hp = self.hp  
 
-    #==========================================행동이미지 로드==========================================
+    #==========================================행동이���지 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
         self.walk_right_image = gfw.image.load(walk_right_image_file)
@@ -154,6 +154,10 @@ class Player:
                 self.can_double_jump = True
 
         self.ui.update()
+
+        # HP가 변경될 때마다 전역 변수 업데이트
+        config.PLAYER_CURRENT_HP = self.hp
+        config.PLAYER_CURRENT_MP = self.mp
 
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
@@ -455,6 +459,14 @@ class CustomPlayer(Player):
         else:
             self.weapon = None
 
+        if not hasattr(config, 'PLAYER_CURRENT_HP'):
+            config.PLAYER_CURRENT_HP = self.max_hp  # 처음 시작할 때만 max_hp로 설정
+            config.PLAYER_CURRENT_MP = self.max_mp
+        
+        # 저장된 상태값 사용
+        self.hp = config.PLAYER_CURRENT_HP
+        self.mp = config.PLAYER_CURRENT_MP
+
     def get_bounding_box(self):
         half_width = self.frame_width // 2
         half_height = self.frame_height // 2
@@ -463,3 +475,14 @@ class CustomPlayer(Player):
     def equip_weapon(self):
         if self.weapon is None:
             self.weapon = Weapon()  
+
+    def update(self):
+        super().update()
+        # 현재 상태 저장
+        config.PLAYER_CURRENT_HP = self.hp
+        config.PLAYER_CURRENT_MP = self.mp
+
+    def get_hit(self, damage, attack_type='normal'):
+        super().get_hit(damage, attack_type)
+        # 피격 시에도 상태 저장
+        config.PLAYER_CURRENT_HP = self.hp
