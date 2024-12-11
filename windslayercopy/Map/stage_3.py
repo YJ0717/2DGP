@@ -151,14 +151,14 @@ class TileMap:
         self.draw_portal()
 
     def draw_portal(self):
-        portal_x = 1500 + self.x_offset
-        portal_y = 900 - self.y_offset
-        half_width = 25
-        half_height = 50
+        portal_x = 2400 + self.x_offset
+        portal_y = 230 - self.y_offset
+        half_width = self.portal_image.w // 8
+        half_height = self.portal_image.h // 2
 
-        frame = int(self.portal_animation_frame)
         self.portal_image.clip_draw(
-            frame * 50, 0, 50, 100,
+            int(self.portal_animation_frame) * self.portal_image.w // 4, 0,
+            self.portal_image.w // 4, self.portal_image.h,
             portal_x, portal_y
         )
 
