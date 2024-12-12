@@ -4,7 +4,7 @@ from player import CustomPlayer
 import config
 from enemy.enemy_03 import Enemy_03
 from enemy.enemy_04 import Enemy_04
-from Map.stage_3 import TileMap, get_tile_map
+from Map.stage_4 import TileMap, get_tile_map
 
 world = gfw.World(['background', 'tile', 'enemy', 'player'])
 
@@ -48,10 +48,41 @@ class TileMap:
         
         self.update_portal_animation()
 
-    def update_portal_animation(self):
-        self.portal_animation_frame += gfw.frame_time * self.portal_animation_speed
-        if self.portal_animation_frame >= 4:
-            self.portal_animation_frame = 0
+    def draw(self):
+        for y in range(len(self.tile_map_data)):
+            row = self.tile_map_data[y]
+            for x in range(len(row)):
+                tile_index = row[x]
+                if tile_index >= 0:
+                    tile_image = self.tile_images[tile_index]
+                    tile_x = x * self.tile_size + self.tile_size // 2 + self.x_offset
+                    tile_y = y * self.tile_size + self.tile_size // 2 - self.y_offset
+                    tile_image.draw(tile_x, tile_y)
+
+                    # 타일 인덱스에 따른 바운딩 박스 그리기
+                    if tile_index == 1:  # 일반 타일
+                        half_width = 762 // 2
+                        half_height = 281 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
+                    elif tile_index == 2:  # 작은 타일
+                        half_width = 240 // 2
+                        half_height = 26 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
+                    elif tile_index == 3:  # 중간 타일
+                        half_width = 400 // 2
+                        half_height = 32 // 2
+                        draw_rectangle(
+                            tile_x - half_width, tile_y - half_height,
+                            tile_x + half_width, tile_y + half_height
+                        )
+
+            self.draw_portal()
 
     def check_collision(self):
         self.x_offset = -self.player.x
@@ -120,56 +151,6 @@ class TileMap:
                             self.player.can_double_jump = True
                             self.player.is_jumping = False
                             self.player.current_image = self.player.idle_image
-
-    def draw(self):
-        for y in range(len(self.tile_map_data)):
-            row = self.tile_map_data[y]
-            for x in range(len(row)):
-                tile_index = row[x]
-                if tile_index >= 0:
-                    tile_image = self.tile_images[tile_index]
-                    tile_x = x * self.tile_size + self.tile_size // 2 + self.x_offset
-                    tile_y = y * self.tile_size + self.tile_size // 2 - self.y_offset
-                    tile_image.draw(tile_x, tile_y)
-
-                    if tile_index == 1:  
-                        half_width = 762 // 2
-                        half_height = 281 // 2
-                        draw_rectangle(
-                            tile_x - half_width, tile_y - half_height,
-                            tile_x + half_width, tile_y + half_height
-                        )
-                    elif tile_index == 2:  
-                        half_width = 240 // 2
-                        half_height = 26 // 2
-                        draw_rectangle(
-                            tile_x - half_width, tile_y - half_height,
-                            tile_x + half_width, tile_y + half_height
-                        )
-                    elif tile_index == 3:  
-                        half_width = 400 // 2
-                        half_height = 32 // 2
-                        draw_rectangle(
-                            tile_x - half_width, tile_y - half_height,
-                            tile_x + half_width, tile_y + half_height
-                        )
-
-        self.draw_portal()
-
-    def draw_portal(self):
-        portal_x = 2400 + self.x_offset
-        portal_y = 230 - self.y_offset
-        half_width = self.portal_image.w // 8
-        half_height = self.portal_image.h // 2
-
-        self.portal_image.clip_draw(
-            int(self.portal_animation_frame) * self.portal_image.w // 4, 0,
-            self.portal_image.w // 4, self.portal_image.h,
-            portal_x, portal_y
-        )
-
-        draw_rectangle(portal_x - half_width, portal_y - half_height,
-                       portal_x + half_width, portal_y + half_height)
 
     def check_enemy_collision(self, enemy):
         enemy_x = enemy.x
@@ -249,87 +230,25 @@ class TileMap:
         else:
             self.player.near_portal = False
 
-def enter():
-    global player, background, tile_map, enemies
-    player = CustomPlayer(equip_weapon=True)
-    player.x = config.PLAYER_START_X
-    player.y = config.PLAYER_START_Y 
-    player.velocity_y = 0
-    
-    # ===== 적들 위치 설정 =====
-    enemies = [
-        Enemy_04(500, 500, player=player),
-    ]
-    
-    # 각 적에게 플레이어 참조 전달
-    for enemy in enemies:
-        enemy.player = player  # 여기서 플레이어 참조를 설정
-    
-    background = Background()
-    tile_images, tile_map_data = get_tile_map()
-    tile_map = TileMap(tile_images, tile_map_data, 32, player)
-    
-    for enemy in enemies:
-        tile_map.check_enemy_collision(enemy)
-    
-    world.append(background, world.layer.background)
-    world.append(tile_map, world.layer.tile)
-    
-    for enemy in enemies:
-        world.append(enemy, world.layer.enemy)
-    
-    world.append(player, world.layer.player)
+    def draw_portal(self):
+        portal_x = 2400 + self.x_offset
+        portal_y = 230 - self.y_offset
+        half_width = self.portal_image.w // 8
+        half_height = self.portal_image.h // 2
 
-def exit():
-    world.clear()
+        self.portal_image.clip_draw(
+            int(self.portal_animation_frame) * self.portal_image.w // 4, 0,
+            self.portal_image.w // 4, self.portal_image.h,
+            portal_x, portal_y
+        )
 
-def handle_event(e):
-    global tile_map, player
-    if e.type == SDL_KEYDOWN:
-        if e.key == SDLK_UP:  
-            if tile_map.player.near_portal:
-                import Map.stage_5 as stage_5
-                gfw.change(stage_5)
-                return True
-    return player.handle_event(e)
+        draw_rectangle(portal_x - half_width, portal_y - half_height,
+                       portal_x + half_width, portal_y + half_height)
 
-def update():
-    world.update()
-    
-    for enemy in world.objects[world.layer.enemy]:
-        if isinstance(enemy, Enemy_04):
-            for projectile in enemy.projectiles[:]:
-                # 플레이어와 투사체의 직접적인 거리 체크
-                dx = abs(projectile['x'] - player.x)
-                dy = abs(projectile['y'] - player.y)
-                
-                if dx < 50 and dy < 50:  
-                    player.get_hit(enemy.projectile_damage)
-                    enemy.projectiles.remove(projectile)
-    
-    player.update()
-    player.prev_hp = player.hp
-    player.ui.update()
-
-def collision(a, b):
-    # 간단한 AABB 충돌 체크
-    a_bb = a.get_bb()
-    b_bb = b.get_bounding_box()
-    
-    return not (a_bb[0] > b_bb[2] or
-                a_bb[2] < b_bb[0] or
-                a_bb[1] > b_bb[3] or
-                a_bb[3] < b_bb[1])
-
-def check_collisions():
-    for enemy in world.objects[world.layer.enemy]:
-        if isinstance(enemy, Enemy_04):
-            for projectile in enemy.projectiles[:]:
-                if enemy.check_projectile_collision(projectile, player):
-                    enemy.projectiles.remove(projectile)
-
-def draw():
-    world.draw()
+    def update_portal_animation(self):
+        self.portal_animation_frame += gfw.frame_time * self.portal_animation_speed
+        if self.portal_animation_frame >= 4:
+            self.portal_animation_frame = 0
 
 def get_tile_map():
     tile_images = [
@@ -344,7 +263,6 @@ def get_tile_map():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -353,27 +271,105 @@ def get_tile_map():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,3],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ]
 
     return tile_images, tile_map_data
+
+def enter():
+    global player, background, tile_map, enemies
+    player = CustomPlayer(equip_weapon=True)
+    player.x = config.PLAYER_START_X
+    player.y = config.PLAYER_START_Y 
+    player.velocity_y = 0
+    
+    enemies = [
+        Enemy_04(600, 900, player),  
+        Enemy_04(800, 400, player),  
+        Enemy_04(1200, 400, player)  
+    ]
+    
+    background = Background()
+    tile_images, tile_map_data = get_tile_map()
+    tile_map = TileMap(tile_images, tile_map_data, 32, player)
+    
+    for enemy in enemies:
+        tile_map.check_enemy_collision(enemy)
+    
+    world.append(background, world.layer.background)
+    world.append(tile_map, world.layer.tile)
+    world.append(player, world.layer.player)
+    
+    for enemy in enemies:
+        world.append(enemy, world.layer.enemy)
+
+def exit():
+    world.clear()
+
+def update():
+    world.update()
+    
+    for enemy in world.objects[world.layer.enemy]:
+        if isinstance(enemy, Enemy_04):
+            for projectile in enemy.projectiles[:]:
+                dx = abs(projectile['x'] - player.x)
+                dy = abs(projectile['y'] - player.y)
+                
+                if dx < 50 and dy < 50:  # 충돌 거리 임계값
+                    player.get_hit(enemy.projectile_damage)
+                    enemy.projectiles.remove(projectile)
+    
+    player.update()
+    player.prev_hp = player.hp
+    player.ui.update()
+
+def draw():
+    world.draw()
+
+def handle_event(e):
+    global tile_map, player
+    if e.type == SDL_KEYDOWN:
+        if e.key == SDLK_UP:  
+            if tile_map.player.near_portal:
+                import Map.stage_5 as stage_5
+                gfw.change(stage_5)
+                return True
+    return player.handle_event(e)
+
+def pause():
+    pass
+
+def resume():
+    pass
+
+def check_collisions():
+    for enemy in world.objects[world.layer.enemy]:
+        if isinstance(enemy, Enemy_04):
+            for projectile in enemy.projectiles[:]:
+                if enemy.check_projectile_collision(projectile, player):
+                    enemy.projectiles.remove(projectile)
+
+def collision(a, b):
+    # 간단한 AABB 충돌 체크
+    a_bb = a.get_bb()
+    b_bb = b.get_bounding_box()
+    
+    return not (a_bb[0] > b_bb[2] or
+                a_bb[2] < b_bb[0] or
+                a_bb[1] > b_bb[3] or
+                a_bb[3] < b_bb[1])
 
 if __name__ == '__main__':
     gfw.start_main_module() 
