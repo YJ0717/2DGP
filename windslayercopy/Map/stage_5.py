@@ -2,8 +2,7 @@ from pico2d import *
 import gfw
 from player import CustomPlayer
 import config
-from enemy.enemy_03 import Enemy_03
-from enemy.enemy_04 import Enemy_04
+from enemy.enemy_05 import Enemy_05
 from Map.stage_4 import TileMap, get_tile_map
 
 world = gfw.World(['background', 'tile', 'enemy', 'player'])
@@ -274,7 +273,7 @@ def get_tile_map():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -296,9 +295,7 @@ def enter():
     player.velocity_y = 0
     
     enemies = [
-        Enemy_04(600, 900, player),  
-        Enemy_04(800, 400, player),  
-        Enemy_04(1200, 400, player)  
+        Enemy_05(800, 400, player),  
     ]
     
     background = Background()
@@ -322,7 +319,7 @@ def update():
     world.update()
     
     for enemy in world.objects[world.layer.enemy]:
-        if isinstance(enemy, Enemy_04):
+        if isinstance(enemy, Enemy_05):
             for projectile in enemy.projectiles[:]:
                 dx = abs(projectile['x'] - player.x)
                 dy = abs(projectile['y'] - player.y)
@@ -356,7 +353,7 @@ def resume():
 
 def check_collisions():
     for enemy in world.objects[world.layer.enemy]:
-        if isinstance(enemy, Enemy_04):
+        if isinstance(enemy, Enemy_05):
             for projectile in enemy.projectiles[:]:
                 if enemy.check_projectile_collision(projectile, player):
                     enemy.projectiles.remove(projectile)
