@@ -224,8 +224,8 @@ class TileMap:
             if self.player.near_portal and get_events():
                 for event in get_events():
                     if event.type == SDL_KEYDOWN and event.key == SDLK_UP:
-                        import Map.stage_5 as stage_5
-                        gfw.change(stage_5)
+                        import Map.stage_1 as stage_1
+                        gfw.change(stage_1)
         else:
             self.player.near_portal = False
 
@@ -317,6 +317,11 @@ def exit():
 
 def update():
     world.update()
+    check_collisions()
+    
+    # 보스 처치 확인
+    if len(world.objects[world.layer.enemy]) == 0:  # 모든 적이 처치됐을 때
+        config.GAME_CLEARED = True  # 게임 클리어 상태로 설정
     
     for enemy in world.objects[world.layer.enemy]:
         if isinstance(enemy, Enemy_05):
@@ -340,8 +345,10 @@ def handle_event(e):
     if e.type == SDL_KEYDOWN:
         if e.key == SDLK_UP:  
             if tile_map.player.near_portal:
-                import Map.stage_5 as stage_5
-                gfw.change(stage_5)
+                import config
+                config.GAME_CLEARED = True  
+                import Map.stage_1 as stage_1
+                gfw.change(stage_1)
                 return True
     return player.handle_event(e)
 

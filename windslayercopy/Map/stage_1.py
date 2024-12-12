@@ -2,10 +2,27 @@ from pico2d import *
 import gfw
 import gfw.image as image
 from pico2d import draw_rectangle
-from player import Player
+from player import Player, CustomPlayer
+import config
 
 bb_width = 763
 bb_height = 280
+
+world = gfw.World(['background', 'tile', 'player'])
+
+class Background:
+    def __init__(self):
+        self.image = gfw.image.load('background.png')
+        self.x = 0
+        self.y = 0
+
+    def update(self):
+        global player
+        self.x = -player.x * 0.5
+        self.y = -player.y * 0.1
+
+    def draw(self):
+        self.image.draw_to_origin(self.x, self.y, 3000, 1250)
 
 #===============================타일클래스 도입==========================================
 class TileMap:
@@ -36,10 +53,10 @@ class TileMap:
 
         self.talk_image = image.load('npc_talk1.png')
 
-        #===============================두 번째 NPC 도입==========================================
-        self.npc2_image = image.load('npc_02.png')  # 두 번째 NPC 이미지 로드
-        self.npc2_x = 2000  # 두 번째 NPC의 x 좌표
-        self.npc2_y = 250  # 두 번째 NPC의 y 좌표
+        #=============================== 2번째 NPC 도입==========================================
+        self.npc2_image = image.load('npc_02.png')  
+        self.npc2_x = 2000  
+        self.npc2_y = 250  
         self.npc2_frame = 0
         self.npc2_frame_count = 3
         self.npc2_frame_width = 87
@@ -50,19 +67,46 @@ class TileMap:
         self.npc2_collision_x = 1000
         self.npc2_collision_y = 232
 
-        self.talk2_image = image.load('npc_talk2.png')  # 두 번째 NPC의 말풍선 이미지 로드
+        self.talk2_image = image.load('npc_talk2.png')  
 
-# ====================충돌처리 및 애니메이션을 위한 업데이트 ================
+#===============================NPC3 도입==========================================
+        self.npc3_image = image.load('npc_03.png')  
+        self.npc3_frame = 0
+        self.npc3_frame_count = 4  
+        self.npc3_frame_width = 60  
+        self.npc3_frame_height = 160  
+        self.npc3_x = 1478  
+        self.npc3_y = 232
+        self.npc3_fps = 8  
+        self.npc3_time = 0
+        
+        # NPC3 대화 이미지와 상태
+        self.talk3_quest_image = image.load('talk3_quest.png')
+        self.talk3_clear_image = image.load('talk3_clear.png')
+        self.npc3_talk_time = 0
+        self.npc3_talk_duration = 2.0  
+
     def update(self):
         self.x_offset = -self.player.x  
         self.check_collision()
         self.update_portal_animation()  
         self.update_npc_animation()
         self.update_npc2_animation()
+        self.update_npc3_animation()
+        
+        # NPC3 대화 시간 업데이트
+        if self.player.talk_to_npc3:
+            self.npc3_talk_time += gfw.frame_time
+            if self.npc3_talk_time >= self.npc3_talk_duration:
+                self.player.talk_to_npc3 = False
+                self.npc3_talk_time = 0
+                if config.GAME_CLEARED:  
+                    import game_clear_scene
+                    gfw.change(game_clear_scene)
 
     def update_portal_animation(self):
         self.portal_animation_frame += gfw.frame_time * self.portal_animation_speed
-        if self.portal_animation_frame >= 4:  # 애니메션 프레임 수에 따라 조정
+        if self.portal_animation_frame >= 4:  # 애니메이션 프레임 수에 따라 조정
             self.portal_animation_frame = 0
 
     def update_npc_animation(self):
@@ -73,7 +117,10 @@ class TileMap:
         self.npc2_time += gfw.frame_time
         self.npc2_frame = int(self.npc2_time * self.npc2_fps) % self.npc2_frame_count
 
-#======================== 충돌처리 ======================
+    def update_npc3_animation(self):
+        self.npc3_time += gfw.frame_time
+        self.npc3_frame = int(self.npc3_time * self.npc3_fps) % self.npc3_frame_count
+
     def check_collision(self):
         player_x = self.player.x
         player_y = self.player.y
@@ -147,7 +194,26 @@ class TileMap:
         else:
             self.player.near_npc2 = False
 
-#======================== 타일 그리기 ======================
+        # NPC3와의 상호작용 체크
+        npc3_box = (
+            self.npc3_x + self.x_offset - 50,
+            self.npc3_y - 50,
+            self.npc3_x + self.x_offset + 50,
+            self.npc3_y + 50
+        )
+        
+        player_box = self.player.get_bounding_box()
+        
+        if (player_box[0] < npc3_box[2] and
+            player_box[2] > npc3_box[0] and
+            player_box[1] < npc3_box[3] and
+            player_box[3] > npc3_box[1]):
+            self.player.near_npc3 = True
+        else:
+            self.player.near_npc3 = False
+            self.player.talk_to_npc3 = False
+            self.npc3_talk_time = 0
+
     def draw(self):
         for y in range(len(self.tile_map_data)):
             row = self.tile_map_data[y]
@@ -160,7 +226,7 @@ class TileMap:
                     tile_image.draw(tile_x, tile_y)
 
         
-        portal_x = 2400 + self.x_offset  # 플레이어의 x_offset을 추가야만 포탈이 고정된 위치에 존재
+        portal_x = 2400 + self.x_offset 
         portal_y = 230   
         self.portal_image.clip_draw(
             int(self.portal_animation_frame) * self.portal_image.w // 4, 0,
@@ -178,7 +244,6 @@ class TileMap:
         self.npc_image.clip_draw(npc_x_offset, 0, self.npc_frame_width, self.npc_frame_height,
                                  self.npc_x + self.x_offset, self.npc_y)
 
-        # 말풍선 
         if self.player.near_npc:
             self.talk_image.draw(self.npc_x + self.x_offset, self.npc_y + self.npc_frame_height + 20)
 
@@ -186,12 +251,25 @@ class TileMap:
         self.npc2_image.clip_draw(npc2_x_offset, 0, self.npc2_frame_width, self.npc2_frame_height,
                                   self.npc2_x + self.x_offset, self.npc2_y)
 
-        # 두 번째 NPC의 말풍선
         if self.player.talk_to_npc2:
             self.talk2_image.draw(self.npc2_x + self.x_offset, self.npc2_y + self.npc2_frame_height + 20)
 
+        # NPC3 그리기
+        npc3_x_offset = self.npc3_frame * self.npc3_frame_width
+        self.npc3_image.clip_draw(npc3_x_offset, 0, self.npc3_frame_width, self.npc3_frame_height,
+                                self.npc3_x + self.x_offset, self.npc3_y)
+        
+        # NPC3 대화 말풍선 표시 수정
+        if self.player.near_npc3:
+            if config.GAME_CLEARED:  # 스테이지5 클리어 후
+                self.talk3_clear_image.draw(self.npc3_x + self.x_offset, self.npc3_y + self.npc3_frame_height + 20)
+                if self.player.talk_to_npc3:  # NPC3와 대화하면
+                    import game_clear_scene
+                    gfw.change(game_clear_scene)
+            else:  # 스테이지5 클리어 전
+                self.talk3_quest_image.draw(self.npc3_x + self.x_offset, self.npc3_y + self.npc3_frame_height + 20)
+
 def get_tile_map():
-    # 타일 이미지 로드
     tile_images = [
         image.load('tile0.png'),  # 투명블럭
         image.load('tile1.png')   # tile1.png
@@ -203,3 +281,52 @@ def get_tile_map():
     ]
 
     return tile_images, tile_map_data
+
+def enter():
+    global player, background, tile_map
+    player = CustomPlayer(equip_weapon=False)
+    player.x = config.PLAYER_START_X
+    player.y = config.PLAYER_START_Y 
+    player.velocity_y = 0
+    
+    background = Background()
+    tile_images, tile_map_data = get_tile_map()
+    tile_map = TileMap(tile_images, tile_map_data, 32, player)
+    
+    world.append(background, world.layer.background)
+    world.append(tile_map, world.layer.tile)
+    world.append(player, world.layer.player)
+
+def exit():
+    world.clear()
+
+def update():
+    world.update()
+    player.update()
+    player.prev_hp = player.hp
+    player.ui.update()
+
+def draw():
+    world.draw()
+
+def handle_event(e):
+    global tile_map, player
+    if e.type == SDL_KEYDOWN:
+        if e.key == SDLK_UP:  
+            if player.near_npc:  
+                player.talk_to_npc = True
+            elif player.near_npc2:  
+                player.talk_to_npc2 = True
+            elif player.near_npc3:  
+                if config.GAME_CLEARED:  
+                    import game_clear_scene
+                    gfw.change(game_clear_scene)
+                else:
+                    player.talk_to_npc3 = True  
+    return player.handle_event(e)
+
+def pause():
+    pass
+
+def resume():
+    pass

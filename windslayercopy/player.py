@@ -49,7 +49,7 @@ class Player:
         self.hit_frame = 0 
         self.prev_hp = self.hp  
 
-    #==========================================행동이���지 로드==========================================
+    #==========================================행동이지 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
         self.walk_right_image = gfw.image.load(walk_right_image_file)
@@ -467,6 +467,13 @@ class CustomPlayer(Player):
         self.hp = config.PLAYER_CURRENT_HP
         self.mp = config.PLAYER_CURRENT_MP
 
+        # NPC3 관련 속성 추가
+        self.near_npc3 = False
+        self.talk_to_npc3 = False
+        
+        if equip_weapon:
+            self.equip_weapon()
+
     def get_bounding_box(self):
         half_width = self.frame_width // 2
         half_height = self.frame_height // 2
@@ -478,11 +485,9 @@ class CustomPlayer(Player):
 
     def update(self):
         super().update()
-        # 현재 상태 저장
         config.PLAYER_CURRENT_HP = self.hp
         config.PLAYER_CURRENT_MP = self.mp
 
     def get_hit(self, damage, attack_type='normal'):
         super().get_hit(damage, attack_type)
-        # 피격 시에도 상태 저장
         config.PLAYER_CURRENT_HP = self.hp

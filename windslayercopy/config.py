@@ -206,6 +206,8 @@ NUCLEAR_SKILL_SPAWN_OFFSET_X = 200
 # =================================
 PLAYER_CURRENT_HP = 100  
 PLAYER_CURRENT_MP = 100  
+#=========게임 클리어 여부=========
+GAME_CLEARED = False
 
 
 

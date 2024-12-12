@@ -37,8 +37,8 @@ def start(scene):
 
 def start_main_module():
     import sys
-    scene = sys.modules['__main__']
-    start(scene)
+    import title_scene
+    start(title_scene)
 
 def change(scene):
     global _stack
