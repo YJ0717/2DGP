@@ -49,7 +49,7 @@ class Player:
         self.hit_frame = 0 
         self.prev_hp = self.hp  
 
-    #==========================================행동이지 로드==========================================
+    #==========================================행동이��� 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
         self.walk_right_image = gfw.image.load(walk_right_image_file)
@@ -158,6 +158,12 @@ class Player:
         # HP가 변경될 때마다 전역 변수 업데이트
         config.PLAYER_CURRENT_HP = self.hp
         config.PLAYER_CURRENT_MP = self.mp
+
+        # ====== HP 체크 ======
+        if self.hp <= 0:
+            import game_over_scene
+            gfw.change(game_over_scene)
+            return
 
     #==========================================대쉬 업데이트==========================================
     def update_dash(self):
