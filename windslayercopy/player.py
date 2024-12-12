@@ -1,6 +1,7 @@
 from pico2d import *
 import gfw
 import config
+import gfw.image as image
 import time
 from weapon import Weapon  
 from ui import PlayerUI
@@ -49,7 +50,7 @@ class Player:
         self.hit_frame = 0 
         self.prev_hp = self.hp  
 
-    #==========================================행동이��� 로드==========================================
+    #==========================================행동이 로드==========================================
     def load_images(self, walk_left_image_file, walk_right_image_file, idle_image_file, attack_image_file):
         self.walk_left_image = gfw.image.load(walk_left_image_file)
         self.walk_right_image = gfw.image.load(walk_right_image_file)
@@ -480,6 +481,10 @@ class CustomPlayer(Player):
         if equip_weapon:
             self.equip_weapon()
 
+        # 포션 관련 속성 추가
+        self.potion_available = True
+        self.potion_cooldown_time = 0
+
     def get_bounding_box(self):
         half_width = self.frame_width // 2
         half_height = self.frame_height // 2
@@ -494,6 +499,27 @@ class CustomPlayer(Player):
         config.PLAYER_CURRENT_HP = self.hp
         config.PLAYER_CURRENT_MP = self.mp
 
+        # 포션 쿨타임 업데이트
+        if not self.potion_available:
+            self.potion_cooldown_time += gfw.frame_time
+            if self.potion_cooldown_time >= config.POTION_COOLDOWN:
+                self.potion_available = True
+                self.potion_cooldown_time = 0
+
     def get_hit(self, damage, attack_type='normal'):
         super().get_hit(damage, attack_type)
         config.PLAYER_CURRENT_HP = self.hp
+
+    def use_potion(self):
+        if self.potion_available and self.hp < 100:  # HP가 최대가 아닐 때만 사용 가능
+            self.hp = min(100, self.hp + config.POTION_HEAL_AMOUNT)
+            self.potion_available = False
+            self.potion_cooldown_time = 0
+            config.PLAYER_CURRENT_HP = self.hp
+
+    def handle_event(self, e):
+        if e.type == SDL_KEYDOWN:
+            if e.key == SDLK_1:  # 1번 키를 누르면 포션 사용
+                self.use_potion()
+                return True
+        return super().handle_event(e)  # 기존의 handle_event 호출

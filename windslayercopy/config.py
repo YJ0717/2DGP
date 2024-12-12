@@ -209,5 +209,9 @@ PLAYER_CURRENT_MP = 100
 #=========게임 클리어 여부=========
 GAME_CLEARED = False
 
+# ========================= 포션 관련 설정 =========================
+POTION_COOLDOWN = 5.0  
+POTION_HEAL_AMOUNT = 10  
+
 
 

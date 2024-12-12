@@ -1,5 +1,7 @@
 from pico2d import *
 import gfw.image as image
+import config
+import time
 
 class PlayerUI:
     def __init__(self, player):
@@ -8,6 +10,7 @@ class PlayerUI:
         self.hp_image = image.load('hp_bar.png')
         self.mp_image = image.load('mp_bar.png')
         self.quick_slot_image = image.load('quick_slot.png')
+        self.potion_image = image.load('potion.png')
 
         # =============================== UI 위치 및 크기 설정 ===============================
         self.ui_x, self.ui_y = 160, 695
@@ -20,6 +23,27 @@ class PlayerUI:
 
         # =============================== 퀵슬롯 위치 설정 ===============================
         self.quick_slot_x, self.quick_slot_y = 160, 655
+
+        # =============================== 포션 위치 설정 ===============================
+        self.potion_x = 30
+        self.potion_y = 660
+
+        self.skill_images = {
+            'wind': image.load('wind_icon.png'),
+            'ice': image.load('ice_icon.png'),
+            'fire': image.load('fire_icon.png'),
+            'stone': image.load('stone_icon.png'),
+            'blizzard': image.load('blizzard_icon.png'),
+            'nuclear': image.load('nuclear_icon.png')
+        }
+        self.skill_positions = {
+            'wind': (60, 660),
+            'ice': (100, 660),
+            'fire': (140, 660),
+            'stone': (180, 660),
+            'blizzard': (220, 660),
+            'nuclear': (260, 660)
+        }
 
 #========================최대 hp에서 현재 hp 비율에 따라 줄어드는 위치 계산 ========================
     def draw(self):
@@ -42,6 +66,29 @@ class PlayerUI:
         )
 
         self.quick_slot_image.draw(self.quick_slot_x, self.quick_slot_y)
+
+        # 포션 UI 그리기
+        if self.player.potion_available:
+            self.potion_image.draw(self.potion_x, self.potion_y)
+        else:
+            self.potion_image.opacify(0.5)
+            self.potion_image.draw(self.potion_x, self.potion_y)
+            self.potion_image.opacify(1.0)
+
+        # 스킬 아이콘 그리기
+        if self.player.weapon_equipped and self.player.weapon:
+            for skill_name, pos in self.skill_positions.items():
+                skill_image = self.skill_images[skill_name]
+                x, y = pos
+                
+                # 스킬이 쿨타임 중인지 확인
+                skill = getattr(self.player.weapon, f'{skill_name}_skill', None)
+                if skill and time.time() - skill.last_skill_time < skill.skill_cooldown:
+                    skill_image.opacify(0.5)  # 쿨타임 중이면 반투명하게
+                else:
+                    skill_image.opacify(1.0)  # 사용 가능하면 불투명하게
+                
+                skill_image.draw(x, y)
 
     def update(self):
         # =============================== 필요시 업데이트 로직 추가 ===============================
