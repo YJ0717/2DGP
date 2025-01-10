@@ -20,6 +20,8 @@ def enter():
     world = gfw.World()
     title_image = TitleImage()
     world.append(title_image)
+    
+    gfw.init_audio()
 
 def update():
     world.update()
