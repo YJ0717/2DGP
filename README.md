@@ -2,8 +2,7 @@
 
 
 ## 0. 게임 시연 동영상 <br/>
-https://youtu.be/tv40mm3bO9A <br/>
-
+[https://youtu.be/tv40mm3bO9A <br/>
 
 ## 1.게임의 간단한 소개 (카피의 경우 원작에 대한 언급) <br/>
 
